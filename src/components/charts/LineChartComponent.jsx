@@ -11,7 +11,7 @@ export default function LineChartComponent({ data, lines = [{ key: 'sales', colo
         <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
         <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
         {lines.map((l) => (
-          <Line key={l.key} type="monotone" dataKey={l.key} name={l.name} stroke={l.color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+          <Line key={l.key} type="monotone" dataKey={l.key} name={l.name} stroke={l.color} strokeWidth={2} dot={false} activeDot={{ r: 4 }} isAnimationActive animationDuration={1200} />
         ))}
       </LineChart>
     </ResponsiveContainer>

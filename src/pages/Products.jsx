@@ -1,14 +1,17 @@
 import { useState, useMemo } from 'react'
 import { Search, Filter, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { motion } from 'framer-motion'
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import StatusChip from '../components/ui/StatusChip'
 import Button from '../components/ui/Button'
-import { products, formatCurrency } from '../data/mockData'
+import { useDemo } from '../context/DemoContext'
+import { formatCurrency } from '../data/mockData'
 
 const PAGE_SIZE = 8
 
 export default function Products() {
+  const { products } = useDemo()
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')

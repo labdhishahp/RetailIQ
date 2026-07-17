@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Sidebar from './Sidebar'
 import TopNavbar from './TopNavbar'
+import ToastContainer from '../ui/ToastContainer'
 
 export default function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -11,6 +12,7 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen bg-background dark:bg-slate-950">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      <ToastContainer />
       <div
         className="transition-all duration-250"
         style={{ marginLeft: sidebarCollapsed ? 72 : 260 }}

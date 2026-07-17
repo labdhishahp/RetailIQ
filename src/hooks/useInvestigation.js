@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
 import { investigationAgents, shampooInvestigationResult } from '../data/mockData'
 
-export function useInvestigation() {
-  const [phase, setPhase] = useState('idle') // idle | investigating | complete
+export function useInvestigation(onComplete) {
+  const [phase, setPhase] = useState('idle')
   const [activeAgentIndex, setActiveAgentIndex] = useState(-1)
   const [completedAgents, setCompletedAgents] = useState([])
   const [agentProgress, setAgentProgress] = useState({})
@@ -17,21 +17,19 @@ export function useInvestigation() {
     setAgentProgress({})
     setResult(null)
 
-    let currentIndex = 0
-
     const runAgent = (index) => {
       if (index >= investigationAgents.length) {
         setPhase('complete')
         setActiveAgentIndex(-1)
-        if (isShampooQuery) {
-          setResult(shampooInvestigationResult)
-        } else {
-          setResult({
-            ...shampooInvestigationResult,
-            rootCause: `Analysis complete for: "${query}". Multiple factors identified across sales, inventory, and customer data.`,
-            suggestedCampaign: 'Targeted promotional campaign based on identified opportunities',
-          })
-        }
+        const investigationResult = isShampooQuery
+          ? shampooInvestigationResult
+          : {
+              ...shampooInvestigationResult,
+              rootCause: `Analysis complete for: "${query}". Multiple factors identified across sales, inventory, and customer data.`,
+              suggestedCampaign: 'Targeted promotional campaign based on identified opportunities',
+            }
+        setResult(investigationResult)
+        onComplete?.(investigationResult)
         return
       }
 
@@ -50,13 +48,12 @@ export function useInvestigation() {
         clearInterval(progressInterval)
         setAgentProgress((prev) => ({ ...prev, [agent.id]: 100 }))
         setCompletedAgents((prev) => [...prev, agent.id])
-        currentIndex = index + 1
-        runAgent(currentIndex)
+        runAgent(index + 1)
       }, duration)
     }
 
     runAgent(0)
-  }, [])
+  }, [onComplete])
 
   const reset = useCallback(() => {
     setPhase('idle')

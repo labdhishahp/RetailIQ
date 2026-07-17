@@ -203,13 +203,13 @@ export const decisionHistory = [
 ]
 
 export const investigationAgents = [
-  { id: 'planner', name: 'Planner Agent', icon: 'Brain', task: 'Analyzing query and creating investigation plan', duration: 2000 },
-  { id: 'sales', name: 'Sales Agent', icon: 'TrendingDown', task: 'Analyzing sales trends and revenue patterns', duration: 3000 },
-  { id: 'inventory', name: 'Inventory Agent', icon: 'Package', task: 'Checking stock levels and turnover rates', duration: 2500 },
-  { id: 'pricing', name: 'Pricing Agent', icon: 'DollarSign', task: 'Evaluating pricing strategy and competitor analysis', duration: 2800 },
+  { id: 'planner', name: 'Planner Agent', icon: 'Brain', task: 'Analyzing query and creating investigation plan', duration: 1800 },
+  { id: 'sales', name: 'Sales Agent', icon: 'TrendingDown', task: 'Analyzing sales trends and revenue patterns', duration: 2800 },
+  { id: 'inventory', name: 'Inventory Agent', icon: 'Package', task: 'Checking stock levels and turnover rates', duration: 2400 },
   { id: 'campaign', name: 'Campaign Agent', icon: 'Megaphone', task: 'Reviewing active campaigns and marketing spend', duration: 2200 },
-  { id: 'customer', name: 'Customer Agent', icon: 'Users', task: 'Analyzing customer behavior and satisfaction', duration: 2600 },
-  { id: 'recommendation', name: 'Recommendation Engine', icon: 'Sparkles', task: 'Synthesizing findings and generating recommendations', duration: 3500 },
+  { id: 'pricing', name: 'Pricing Agent', icon: 'DollarSign', task: 'Comparing prices against competitors and market benchmarks', duration: 2600 },
+  { id: 'customer', name: 'Customer Agent', icon: 'Users', task: 'Analyzing buying behaviour and customer satisfaction', duration: 2500 },
+  { id: 'recommendation', name: 'Recommendation Engine', icon: 'Sparkles', task: 'Combining findings and generating recommendations', duration: 3200 },
 ]
 
 export const shampooInvestigationResult = {
@@ -239,15 +239,14 @@ export const shampooInvestigationResult = {
 }
 
 export const simulationDefaults = {
-  question: 'What happens if shampoo price is reduced by 10%?',
+  question: 'What happens if we launch the "Refresh & Save" shampoo bundle campaign?',
   results: {
-    estimatedSales: { value: '+18.5%', change: 18.5, positive: true },
-    revenue: { value: '+6.8%', change: 6.8, positive: true },
-    profit: { value: '-2.1%', change: -2.1, positive: false },
-    inventory: { value: '-24%', change: -24, positive: true },
-    customerSatisfaction: { value: '+12%', change: 12, positive: true },
+    sales: { value: '+18%', change: 18, positive: true },
+    revenue: { value: '+5%', change: 5, positive: true },
+    profit: { value: '-2%', change: -2, positive: false },
+    inventory: { value: 'Stockout in 6 days', change: -6, positive: false, isStockout: true },
   },
-  recommendation: 'Price reduction is recommended. Net positive revenue impact of ~$28.7K/month despite margin compression. Pair with supplier volume discount to offset profit decline.',
+  recommendation: 'Campaign is recommended. +18% sales lift and +5% revenue growth validated. Reorder 400 units immediately to prevent stockout within 6 days. Pair with supplier volume discount to offset 2% margin compression.',
 }
 
 export const promptSuggestions = [

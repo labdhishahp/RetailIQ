@@ -36,8 +36,8 @@ export default function RevenueTrendChart({ data, height = 300 }) {
         <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000000).toFixed(1)}M`} />
         <Tooltip content={<CustomTooltip />} />
         <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-        <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#2563EB" strokeWidth={2} fill="url(#revenueGrad)" />
-        <Area type="monotone" dataKey="profit" name="Profit" stroke="#22C55E" strokeWidth={2} fill="url(#profitGrad)" />
+        <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#2563EB" strokeWidth={2} fill="url(#revenueGrad)" isAnimationActive animationDuration={1200} />
+        <Area type="monotone" dataKey="profit" name="Profit" stroke="#22C55E" strokeWidth={2} fill="url(#profitGrad)" isAnimationActive animationDuration={1200} />
       </AreaChart>
     </ResponsiveContainer>
   )

@@ -1,12 +1,16 @@
 import { motion } from 'framer-motion'
 import {
-  AlertTriangle, Target, TrendingUp, Shield, Package, Megaphone, ListChecks, BarChart3,
+  AlertTriangle, Target, TrendingUp, Shield, Package, Megaphone, ListChecks, BarChart3, Play, CheckCircle2,
 } from 'lucide-react'
 import Card from '../ui/Card'
+import Button from '../ui/Button'
 import StatusChip from '../ui/StatusChip'
+import { useDemo } from '../../context/DemoContext'
 import { formatCurrency } from '../../data/mockData'
 
-export default function RecommendationCard({ result }) {
+export default function RecommendationCard({ result, simulationPhase }) {
+  const { runSimulation } = useDemo()
+
   if (!result) return null
 
   const sections = [
@@ -64,7 +68,6 @@ export default function RecommendationCard({ result }) {
         ))}
       </div>
 
-      {/* Evidence */}
       <Card className="!p-4">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Evidence</p>
         <ul className="space-y-2">
@@ -83,7 +86,6 @@ export default function RecommendationCard({ result }) {
         </ul>
       </Card>
 
-      {/* Next Steps */}
       <Card className="!p-4">
         <div className="flex items-center gap-2 mb-3">
           <ListChecks size={16} className="text-primary" />
@@ -106,6 +108,42 @@ export default function RecommendationCard({ result }) {
           ))}
         </ol>
       </Card>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+      >
+        <Card className="!p-5 bg-gradient-to-br from-violet-50 to-primary/5 dark:from-violet-950/30 dark:to-primary/10 border-primary/20">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Ready to validate this recommendation?</p>
+              <p className="text-xs text-slate-500 mt-1">
+                Run a what-if simulation to project sales, revenue, profit, and inventory impact across the business.
+              </p>
+            </div>
+            {simulationPhase === 'complete' ? (
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+              >
+                <CheckCircle2 size={18} />
+                <span className="text-sm font-semibold">Simulation Applied</span>
+              </motion.div>
+            ) : (
+              <Button
+                onClick={runSimulation}
+                disabled={simulationPhase === 'running'}
+                icon={Play}
+                className="whitespace-nowrap"
+              >
+                {simulationPhase === 'running' ? 'Running Simulation...' : 'Run Simulation'}
+              </Button>
+            )}
+          </div>
+        </Card>
+      </motion.div>
     </motion.div>
   )
 }

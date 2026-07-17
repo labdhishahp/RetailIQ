@@ -1,11 +1,12 @@
 import { AlertTriangle, PackageX, PackagePlus, RefreshCw, Warehouse } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/ui/PageHeader'
 import KpiCard from '../components/ui/KpiCard'
 import Card from '../components/ui/Card'
 import StatusChip from '../components/ui/StatusChip'
 import Button from '../components/ui/Button'
-import { inventoryData, formatCurrency, formatNumber } from '../data/mockData'
+import { useDemo } from '../context/DemoContext'
+import { formatCurrency } from '../data/mockData'
 
 function HeatmapCell({ value }) {
   const intensity = value / 100
@@ -14,56 +15,83 @@ function HeatmapCell({ value }) {
     : `rgba(239, 68, 68, ${intensity * 0.6})`
 
   return (
-    <div
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
       className="w-full aspect-square rounded-md flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-slate-300"
       style={{ backgroundColor: bg }}
       title={`${value}%`}
     >
       {value}
-    </div>
+    </motion.div>
   )
 }
 
 export default function Inventory() {
-  const { summary, lowStock, deadStock, overstock, reorderSuggestions, warehouses, heatmap } = inventoryData
+  const { inventory, simulationPhase, pushToast } = useDemo()
+  const { summary, lowStock, deadStock, overstock, reorderSuggestions, warehouses, heatmap } = inventory
+
+  const handleRefresh = () => {
+    pushToast({
+      title: 'Inventory Refreshed',
+      message: 'Stock levels synced from warehouse systems',
+      type: 'success',
+    })
+  }
 
   return (
     <div>
       <PageHeader
         title="Inventory Health"
         subtitle="Monitor stock levels, turnover, and reorder needs"
-        actions={<Button icon={RefreshCw} size="sm">Refresh Data</Button>}
+        actions={<Button icon={RefreshCw} size="sm" onClick={handleRefresh}>Refresh Data</Button>}
       />
 
-      {/* Summary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <KpiCard title="Total SKUs" value={summary.totalSKUs} icon={PackagePlus} format="number" delay={0} />
         <KpiCard title="Inventory Value" value={summary.totalValue} icon={Warehouse} delay={0.05} />
-        <KpiCard title="Turnover Rate" value={summary.turnoverRate} icon={RefreshCw} format="number" delay={0.1} />
-        <KpiCard title="Fill Rate" value={summary.fillRate} icon={PackagePlus} format="percent" delay={0.15} />
+        <KpiCard title="Turnover Rate" value={summary.turnoverRate} icon={RefreshCw} format="number" delay={0.1} highlight={simulationPhase === 'complete'} />
+        <KpiCard title="Fill Rate" value={summary.fillRate} icon={PackagePlus} format="percent" delay={0.15} highlight={simulationPhase === 'complete'} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        {/* Low Stock */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle size={16} className="text-warning" />
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Low Stock Alerts</h3>
           </div>
           <div className="space-y-3">
-            {lowStock.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900">
-                <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
-                  <p className="text-xs text-slate-500">{item.current} units · Reorder at {item.reorder}</p>
-                </div>
-                <span className="text-xs font-bold text-warning">{item.daysLeft}d left</span>
-              </div>
-            ))}
+            <AnimatePresence mode="popLayout">
+              {lowStock.map((item) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex items-center justify-between p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border ${
+                    item.id === 'PRD-001' && simulationPhase === 'complete'
+                      ? 'border-amber-400 dark:border-amber-600 ring-1 ring-amber-300'
+                      : 'border-amber-100 dark:border-amber-900'
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
+                    <p className="text-xs text-slate-500">{item.current} units · Reorder at {item.reorder}</p>
+                  </div>
+                  <motion.span
+                    key={item.daysLeft}
+                    initial={{ scale: 1.2 }}
+                    animate={{ scale: 1 }}
+                    className="text-xs font-bold text-warning"
+                  >
+                    {item.daysLeft}d left
+                  </motion.span>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </Card>
 
-        {/* Dead Stock */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <PackageX size={16} className="text-danger" />
@@ -82,7 +110,6 @@ export default function Inventory() {
           </div>
         </Card>
 
-        {/* Overstock */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <PackagePlus size={16} className="text-primary" />
@@ -102,20 +129,31 @@ export default function Inventory() {
         </Card>
       </div>
 
-      {/* Reorder + Warehouses */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <Card>
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Reorder Suggestions</h3>
           <div className="space-y-3">
-            {reorderSuggestions.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
-                  <p className="text-xs text-slate-500">Order {item.qty} units · {formatCurrency(item.cost)}</p>
-                </div>
-                <StatusChip status={item.urgency} label={item.urgency} />
-              </div>
-            ))}
+            <AnimatePresence mode="popLayout">
+              {reorderSuggestions.map((item) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className={`flex items-center justify-between p-3 rounded-xl border ${
+                    item.id === 'PRD-001' && simulationPhase === 'complete'
+                      ? 'border-danger/40 bg-red-50/30 dark:bg-red-950/20'
+                      : 'border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
+                    <p className="text-xs text-slate-500">Order {item.qty} units · {formatCurrency(item.cost)}</p>
+                  </div>
+                  <StatusChip status={item.urgency} label={item.urgency} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
           <Button className="w-full mt-4" size="sm">Approve All Reorders</Button>
         </Card>
@@ -144,7 +182,6 @@ export default function Inventory() {
         </Card>
       </div>
 
-      {/* Heatmap */}
       <Card>
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Inventory Heatmap</h3>
         <p className="text-xs text-slate-500 mb-4">Stock health by category over 8 weeks (percentage of optimal levels)</p>
@@ -169,11 +206,6 @@ export default function Inventory() {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="flex items-center gap-4 mt-4 text-[10px] text-slate-500">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-400/60" /> Healthy (&gt;80%)</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-400/60" /> Warning (50-80%)</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-400/60" /> Critical (&lt;50%)</span>
         </div>
       </Card>
     </div>
