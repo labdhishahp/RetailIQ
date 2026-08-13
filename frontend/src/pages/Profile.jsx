@@ -7,11 +7,11 @@ import KpiCard from '../components/ui/KpiCard'
 import { MessageSquare, CheckCircle2, TrendingUp } from 'lucide-react'
 
 const userProfile = {
-  name: 'Alex Kumar',
+  name: 'LABDHI SHAH',
   role: 'Retail Operations Manager',
-  email: 'alex.kumar@retailiq.com',
-  phone: '+1 (555) 234-5678',
-  location: 'New York, NY',
+  email: 'labdhi@retailiq.com',
+  phone: '+91 9999999999',
+  location: 'Mumbai, Maharashtra',
   department: 'Operations',
   joinDate: 'March 2024',
   bio: 'Experienced retail operations manager with 8+ years in multi-channel retail. Leading digital transformation initiatives and AI-driven decision making at RetailIQ.',

@@ -14,15 +14,41 @@ AI-powered decision intelligence for retail businesses. Ask questions in natural
 - Recharts
 - Context API
 
+## Project Structure
+
+```
+retailiq/
+├── frontend/   # React + Vite application
+├── backend/    # FastAPI + SQLAlchemy API
+├── .gitignore
+└── README.md
+```
+
 ## Getting Started
 
 ```bash
-cd retailiq
+cd frontend
 npm install
 npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173)
+
+## Backend
+
+See [backend/README.md](backend/README.md) for API setup, database initialization, and run instructions.
+
+```bash
+cd backend
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # add your Supabase DATABASE_URL
+python -m app.database.init_db
+uvicorn app.main:app --reload
+```
+
+API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## Pages
 
@@ -49,6 +75,7 @@ RetailIQ deploys 7 specialized AI agents (Planner → Sales → Inventory → Pr
 ## Build
 
 ```bash
+cd frontend
 npm run build
 npm run preview
 ```
