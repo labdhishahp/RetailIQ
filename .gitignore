@@ -14,6 +14,8 @@ dist-ssr
 
 # Python
 backend/venv/
+backend/.venv/
+.venv/
 # Environment files (any location/variant); template stays tracked
 .env
 .env.*
