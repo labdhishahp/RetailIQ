@@ -1,10 +1,10 @@
-import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Package, Warehouse, Users, BarChart3, Megaphone,
-  Sparkles, FileText, History, Settings, LogOut, ChevronLeft, ChevronRight,
+  Sparkles, FileText, History, Settings, LogOut, ChevronLeft, ChevronRight, BookOpen,
 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const navItems = [
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/copilot', label: 'AI Copilot', icon: Sparkles, highlight: true },
+  { path: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { path: '/reports', label: 'Reports', icon: FileText },
   { path: '/history', label: 'History', icon: History },
   { path: '/settings', label: 'Settings', icon: Settings },
@@ -21,6 +22,12 @@ const navItems = [
 
 export default function Sidebar({ collapsed, onToggle }) {
   const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <motion.aside
@@ -90,7 +97,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Footer */}
       <div className="p-3 border-t border-slate-200/80 dark:border-slate-800 space-y-1">
         <button
-          onClick={() => navigate('/login')}
+          onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-all w-full"
         >
           <LogOut size={20} />

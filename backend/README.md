@@ -1,119 +1,181 @@
 # RetailIQ Backend
 
-FastAPI backend for the RetailIQ Agentic Retail Decision Intelligence Platform.
+FastAPI + SQLAlchemy service over Supabase PostgreSQL, providing the analytics,
+agentic copilot, RAG retrieval and operational write APIs.
 
-## Tech Stack
+## Stack
 
-- Python 3.11+
-- FastAPI
-- SQLAlchemy 2.0
-- PostgreSQL (Supabase)
-- Pydantic v2
-- python-dotenv / pydantic-settings
+Python 3.11 · FastAPI · SQLAlchemy 2.0 · Pydantic v2 · psycopg2 · pgvector ·
+PyJWT · Alembic · pytest
 
-## Project Structure
+## Layout
 
 ```
-backend/
-├── app/
-│   ├── main.py                 # FastAPI application entrypoint
-│   ├── api/                    # HTTP routes and dependencies
-│   │   ├── deps.py             # get_db dependency
-│   │   └── v1/
-│   │       └── router.py       # Retail data endpoints
-│   ├── core/
-│   │   └── config.py           # Environment configuration
-│   ├── database/
-│   │   ├── base.py             # Declarative base + timestamps
-│   │   ├── session.py          # Engine, SessionLocal, get_db
-│   │   └── init_db.py          # Table creation + optional seed
-│   ├── models/                 # SQLAlchemy ORM models
-│   ├── schemas/                # Pydantic request/response schemas
-│   ├── services/               # Business logic layer (placeholder)
-│   ├── agents/                 # Future LangGraph agents
-│   ├── copilot/                # Future AI Copilot layer
-│   ├── recommendations/        # Future recommendation engine
-│   └── simulation/             # Future what-if simulation
-├── requirements.txt
-├── .env.example
-└── README.md
+backend/app/
+├── main.py                    # app factory, CORS, error handlers, /health
+├── api/
+│   ├── deps.py                # get_db, get_current_user, role guards
+│   └── v1/
+│       ├── router.py          # entity + analytics endpoints
+│       └── routes/            # auth, copilot, insights, operations
+├── agents/
+│   ├── tools.py               # the tool surface agents may call (all hit the DB)
+│   ├── base.py                # Agent, Finding, AgentResult
+│   ├── specialists.py         # sales, inventory, pricing, campaign, customer, store, knowledge
+│   ├── planner.py             # intent -> agent plan (LLM or rules)
+│   └── orchestrator.py        # runs the plan, synthesises the result
+├── core/                      # settings, password hashing, JWT
+├── database/                  # base, session, init_db, seed_knowledge
+├── models/                    # 22 ORM models
+├── schemas/                   # request/response models
+└── services/                  # analytics, rag, embedding, llm, recommendations,
+                               # simulation, alerts, reports, operations, cache
 ```
 
 ## Setup
 
-### 1. Create and activate a virtual environment
-
 ```bash
-cd backend
-python3.11 -m venv venv
-source venv/bin/activate
-```
-
-### 2. Install dependencies
-
-```bash
+python3.11 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env          # set DATABASE_URL
+python -m app.database.init_db --recreate
+uvicorn app.main:app --reload --port 8000
 ```
 
-### 3. Configure environment
+Sign in with `admin@retailiq.app` / `RetailIQ2026!` (also `manager@` and
+`analyst@`, same password).
+
+## Security
+
+- JWT access + refresh tokens; passwords hashed with PBKDF2-HMAC-SHA256
+  (240k iterations, per-password salt) from the standard library, so there is
+  no binary wheel dependency on the serverless runtime.
+- Three roles: `analyst` (read), `manager` (read + write), `admin` (+ user
+  management). Every endpoint is authenticated; writes require manager.
+- Database errors return a generic 503 — driver text can contain the
+  connection string and is only logged.
+
+## The copilot
+
+`POST /api/v1/copilot/query` runs a real pipeline:
+
+1. **Planner** picks specialists from the question's intent and extracts a
+   focus term by matching against actual product and category names.
+2. **Specialists** each call tools in `agents/tools.py`. Every tool is a SQL
+   query against the operational tables, so findings always cite real numbers.
+3. **Knowledge agent** retrieves supporting passages from the document corpus.
+4. **Synthesis** ranks findings by relevance to the question, then severity,
+   and composes the root cause, evidence, impact and next steps.
+
+Conversations, messages and per-agent traces (tools called, duration,
+findings) are persisted.
+
+**`LLM_API_KEY` is optional.** Without it, planning uses an intent classifier
+and synthesis uses the rule composer — the data analysis is identical either
+way. With a key, the LLM handles planning and narrative on top of the same
+findings.
+
+## RAG
+
+Documents are chunked, embedded and stored in `document_chunks.embedding`
+(`pgvector`, 384 dims). Retrieval is **hybrid**: vector cosine distance fused
+with Postgres full-text ranking via reciprocal rank fusion.
+
+Embeddings are computed locally (`services/embedding.py`) from hashed word
+unigrams, bigrams and character 4-grams with sub-linear weighting, L2
+normalised. This was chosen over a hosted embedding API or a transformer so
+retrieval works with no API key and no large dependency; the trade-off is
+lexical rather than deep semantic matching, which is why retrieval is hybrid.
+
+## Endpoints
+
+Auth: `POST /auth/login`, `/auth/refresh`, `GET|PATCH /auth/me`,
+`POST /auth/me/password`, `GET|PUT /auth/me/preferences`,
+`GET|POST /auth/users` (admin).
+
+Entities: `stores`, `products`, `inventory`, `sales`, `customers`, `campaigns`
+(+ single-item lookups).
+
+Analytics: `kpis`, `revenue-trend`, `monthly-sales`, `sales?period=`,
+`store-comparison`, `category-sales`, `top-products`, `products-overview`,
+`inventory-overview`, `inventory-trend`, `campaign-performance`.
+
+Copilot: `POST /copilot/query`, conversations CRUD, `GET /copilot/search`,
+documents CRUD, `GET /copilot/knowledge-stats`.
+
+Intelligence: recommendations (list / generate / action), decisions,
+`POST /simulations/run`, alerts (list / evaluate / read), reports
+(list / generate / download as CSV or JSON).
+
+Operations: product create/update/delete, `POST /inventory/adjust`,
+`PATCH /inventory/{id}`, `GET /stock-movements`, `POST /sales`,
+purchase orders (create / receive).
+
+Interactive docs at `/docs`.
+
+## Derived metrics
+
+Figures with no column behind them are derived; each derivation is documented
+at its method:
+
+- **healthScore** — equal-weight composite of margin ratio, fill rate and
+  order-growth momentum.
+- **heatmap / inventory trend** — historical stock is reconstructed by adding
+  units sold after each week onto current on-hand, for periods predating the
+  `stock_movements` ledger.
+- **daysLeft / days_cover** — on-hand ÷ 90-day average daily sales, capped 99.
+- **dead stock** — on hand with no sale in 60 days.
+- **elasticity** — regressed from the product's own monthly price/volume
+  history when there are ≥3 distinct price points, else a category default.
+  Each simulated product reports which source was used.
+
+## Performance
+
+Analytics responses are cached in-process (`ANALYTICS_CACHE_SECONDS`, default
+60) and the cache is flushed on every write. The dashboard's 15-call fan-out
+takes ~3s cold and ~1.4s warm; before caching and the set-based rewrite of the
+weekly loops it exceeded two minutes.
+
+## Migrations
 
 ```bash
-cp .env.example .env
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
 ```
 
-Edit `.env` and set your Supabase PostgreSQL connection string:
+`init_db --recreate` remains available for rebuilding a demo database from
+scratch. Use migrations for schema changes to an existing one — `create_all`
+never ALTERs an existing table.
 
-```env
-DATABASE_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres
-API_HOST=0.0.0.0
-API_PORT=8000
-```
-
-> Supabase requires SSL. If needed, append `?sslmode=require` to `DATABASE_URL`.
-
-### 4. Initialize the database
-
-Create tables (schema only):
+## Tests
 
 ```bash
-python -c "from app.database.init_db import initialize_database; initialize_database()"
+pytest -q          # 67 tests
 ```
 
-Create tables and seed sample retail data:
+Tests run against a throwaway schema in the same PostgreSQL database, created
+via SQLAlchemy's `schema_translate_map` (the Supabase pooler is transaction-mode
+and does not preserve `search_path`). Application data is never touched, and
+the schema is dropped afterwards.
+
+Coverage: password hashing, JWT issuing/expiry/misuse, role enforcement,
+endpoint auth, product CRUD, the stock ledger, oversell prevention, sale
+atomicity and rollback, purchase-order lifecycle, embeddings, hybrid
+retrieval, every agent tool, planner routing, investigation grounding,
+simulation monotonicity, and recommendation rules.
+
+## Seeding
 
 ```bash
-python -m app.database.init_db
+python -m app.database.init_db              # seed only if empty
+python -m app.database.init_db --reset      # clear seeded rows, re-seed
+python -m app.database.init_db --recreate   # drop + recreate tables, re-seed
 ```
 
-## Run
-
-Start the API server:
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Or use values from `.env`:
-
-```bash
-uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000} --reload
-```
-
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/` | API metadata |
-| GET | `/health` | Health check |
-| GET | `/api/v1/stores` | List stores |
-| GET | `/api/v1/products` | List products |
-| GET | `/api/v1/inventory` | List inventory records |
-| GET | `/api/v1/sales` | List sales with items |
-
-Interactive docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-## Development Notes
-
-- Authentication, LangGraph agents, RAG, and LLM integrations are intentionally not implemented yet.
-- Service classes are placeholder implementations ready for richer business logic.
-- Future AI modules live under `app/agents`, `app/copilot`, `app/recommendations`, and `app/simulation`.
+Seeds 5 stores, 6 categories, 24 products, ~95 inventory rows, 40 customers,
+8 campaigns, ~2,400 sales with ~4,800 line items over 12 months, 3 users,
+7 knowledge documents, and runs the first recommendation and alert sweeps.
+Random generation is seeded with a fixed value, so the dataset is reproducible.
+Customer spend, segment and churn status are rolled up from their real sales;
+product status is derived from actual stock; a share of sale lines transact
+below list price so margin analysis has genuine signal.

@@ -12,6 +12,7 @@ import PromptSuggestions from '../components/copilot/PromptSuggestions'
 import { useInvestigation } from '../hooks/useInvestigation'
 import { useDemo } from '../context/DemoContext'
 import { promptSuggestions } from '../data/mockData'
+import { AlertCircle } from 'lucide-react'
 
 export default function AICopilot() {
   const [messages, setMessages] = useState([])
@@ -19,15 +20,22 @@ export default function AICopilot() {
   const [showSimulation, setShowSimulation] = useState(true)
   const [showTyping, setShowTyping] = useState(false)
   const chatEndRef = useRef(null)
-  const { onInvestigationComplete, simulationPhase } = useDemo()
+  const { simulationPhase, pushToast, refreshData } = useDemo()
 
-  const handleInvestigationComplete = useCallback(() => {
-    onInvestigationComplete()
-  }, [onInvestigationComplete])
+  const handleInvestigationComplete = useCallback((result) => {
+    pushToast({
+      title: 'Investigation complete',
+      message: `${result.agents?.length ?? 0} agents · ${result.confidence}% confidence`,
+      type: result.riskLevel === 'high' ? 'warning' : 'success',
+    })
+    // The run persists a conversation and may surface new signals; refresh
+    // quietly so the rest of the app reflects it.
+    refreshData({ silent: true })
+  }, [pushToast, refreshData])
 
   const {
     phase, activeAgentIndex, completedAgents, agentProgress,
-    result, agents, startInvestigation, reset,
+    result, error, agents, startInvestigation, reset,
   } = useInvestigation(handleInvestigationComplete)
 
   useEffect(() => {
@@ -45,10 +53,7 @@ export default function AICopilot() {
     ])
 
     setShowTyping(true)
-    setTimeout(() => {
-      setShowTyping(false)
-      startInvestigation(query)
-    }, 800)
+    startInvestigation(query).finally(() => setShowTyping(false))
   }
 
   const handleNewChat = () => {
@@ -99,7 +104,8 @@ export default function AICopilot() {
                 </motion.div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">How can I help you today?</h2>
                 <p className="text-sm text-slate-500 mb-6 text-center max-w-md">
-                  Ask any business question. I'll deploy specialized AI agents to investigate sales, inventory, pricing, campaigns, and customers.
+                  Ask any business question. Specialist agents query your live sales, inventory,
+                  pricing, campaign and customer data, and retrieve supporting policy documents.
                 </p>
                 <PromptSuggestions suggestions={promptSuggestions} onSelect={handleSend} />
               </div>
@@ -130,7 +136,7 @@ export default function AICopilot() {
                       <div>
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">Investigation in Progress</p>
                         <p className="text-xs text-slate-500">
-                          {completedAgents.length} of {agents.length} agents complete
+                          {completedAgents.length} of {agents.length} agents complete · querying live data
                         </p>
                       </div>
                     </div>
@@ -146,13 +152,42 @@ export default function AICopilot() {
                   </motion.div>
                 )}
 
+                {phase === 'error' && (
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    role="alert"
+                    className="ml-11 mt-3 flex items-start gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800"
+                  >
+                    <AlertCircle size={15} className="text-danger mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-red-700 dark:text-red-400">Investigation failed</p>
+                      <p className="text-xs text-red-600 dark:text-red-400/80 mt-0.5">{error}</p>
+                    </div>
+                  </motion.div>
+                )}
+
                 {phase === 'complete' && result && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <ChatMessage
                       role="assistant"
-                      content="Investigation complete. Here's my analysis and recommendation:"
+                      content={`Investigation complete — ${result.agents.length} agents queried live data in ${(result.elapsedMs / 1000).toFixed(1)}s.`}
                       timestamp={new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     />
+
+                    {/* Execution trace: which agents ran, what they found and
+                        which tools they called. This is the real backend
+                        response, not a replay of the loading animation. */}
+                    <details className="ml-11 mt-3 group" open>
+                      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 select-none">
+                        Agent trace ({result.agents.length})
+                      </summary>
+                      <div className="mt-2 space-y-2">
+                        {result.agents.map((a, i) => (
+                          <AgentCard key={a.id} agent={a} status="complete" progress={100} index={i} />
+                        ))}
+                      </div>
+                    </details>
+
                     <div className="ml-11 mt-3">
                       <RecommendationCard result={result} simulationPhase={simulationPhase} />
                     </div>
@@ -188,13 +223,13 @@ export default function AICopilot() {
 
           {messages.length === 0 && phase === 'idle' && (
             <div className="mt-4">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Recent Conversations</h3>
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Try asking</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
-                  { title: 'Shampoo sales decline', date: 'Today', query: 'Why are shampoo sales decreasing?' },
-                  { title: 'Inventory reorder analysis', date: 'Yesterday', query: 'Which products need immediate reorder?' },
-                  { title: 'Summer campaign ROI', date: 'Jul 14', query: 'How is the Summer Sale campaign performing?' },
-                  { title: 'Customer churn risk', date: 'Jul 12', query: 'Analyze customer churn risk this month' },
+                  { title: 'Shampoo sales decline', date: 'Sales + pricing', query: 'Why are shampoo sales decreasing?' },
+                  { title: 'Reorder analysis', date: 'Inventory', query: 'Which products need immediate reorder?' },
+                  { title: 'Campaign ROI', date: 'Campaigns', query: 'How is the Summer Sale campaign performing?' },
+                  { title: 'Churn risk', date: 'Customers', query: 'Is there customer churn risk?' },
                 ].map((conv) => (
                   <motion.button
                     key={conv.title}

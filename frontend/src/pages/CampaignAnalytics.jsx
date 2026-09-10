@@ -5,9 +5,11 @@ import Card from '../components/ui/Card'
 import StatusChip from '../components/ui/StatusChip'
 import ChartCard from '../components/charts/ChartCard'
 import BarChartComponent from '../components/charts/BarChartComponent'
-import { campaigns, campaignPerformance, formatCurrency, formatNumber } from '../data/mockData'
+import { formatCurrency, formatNumber } from '../data/mockData'
+import { useDemo } from '../context/DemoContext'
 
 export default function CampaignAnalytics() {
+  const { campaigns, campaignPerformance } = useDemo()
   const activeCampaigns = campaigns.filter((c) => c.status === 'active')
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0)
   const totalSpent = campaigns.reduce((s, c) => s + c.spent, 0)

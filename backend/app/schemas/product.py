@@ -4,6 +4,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.category import CategoryRead
+from app.schemas.common import Money
 
 
 class ProductBase(BaseModel):
@@ -12,8 +13,8 @@ class ProductBase(BaseModel):
     description: str | None = None
     category_id: int
     supplier: str | None = None
-    price: Decimal = Field(..., ge=0)
-    cost: Decimal = Field(..., ge=0)
+    price: Money = Field(..., ge=0)
+    cost: Money = Field(..., ge=0)
     status: str = "active"
 
 
@@ -27,8 +28,8 @@ class ProductUpdate(BaseModel):
     description: str | None = None
     category_id: int | None = None
     supplier: str | None = None
-    price: Decimal | None = Field(default=None, ge=0)
-    cost: Decimal | None = Field(default=None, ge=0)
+    price: Money | None = Field(default=None, ge=0)
+    cost: Money | None = Field(default=None, ge=0)
     status: str | None = None
 
 

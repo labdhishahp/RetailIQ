@@ -4,11 +4,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Bell, Sun, Moon, Calendar, ChevronDown } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useDemo } from '../../context/DemoContext'
+import { useAuth } from '../../context/AuthContext'
 
 export default function TopNavbar({ sidebarCollapsed }) {
   const { darkMode, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const { notifications, markNotificationRead, markAllNotificationsRead } = useDemo()
+  const { user, logout } = useAuth()
+
+  const initials = (user?.full_name || 'RQ')
+    .split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
+  const roleLabel = user?.job_title || (user?.role ? user.role[0].toUpperCase() + user.role.slice(1) : '')
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
 
@@ -133,11 +139,13 @@ export default function TopNavbar({ sidebarCollapsed }) {
             className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
           >
             <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
-              AK
+              {initials}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium text-slate-900 dark:text-white leading-tight">Alex Kumar</p>
-              <p className="text-[10px] text-slate-400">Retail Manager</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-white leading-tight">
+                {user?.full_name || 'Signed in'}
+              </p>
+              <p className="text-[10px] text-slate-400">{roleLabel}</p>
             </div>
             <ChevronDown size={14} className="text-slate-400 hidden sm:block" />
           </button>
@@ -161,6 +169,12 @@ export default function TopNavbar({ sidebarCollapsed }) {
                   className="w-full px-4 py-2 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                 >
                   Settings
+                </button>
+                <button
+                  onClick={() => { logout(); navigate('/login', { replace: true }) }}
+                  className="w-full px-4 py-2 text-sm text-left text-danger hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
+                >
+                  Sign out
                 </button>
               </motion.div>
             )}

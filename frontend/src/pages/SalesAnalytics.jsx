@@ -7,9 +7,8 @@ import RevenueTrendChart from '../components/charts/RevenueTrendChart'
 import BarChartComponent from '../components/charts/BarChartComponent'
 import PieChartComponent from '../components/charts/PieChartComponent'
 import LineChartComponent from '../components/charts/LineChartComponent'
-import {
-  salesAnalytics, storeComparison, categorySales, kpiData, formatCurrency, formatPercent,
-} from '../data/mockData'
+import { formatCurrency, formatPercent } from '../data/mockData'
+import { useDemo } from '../context/DemoContext'
 
 const tabs = [
   { id: 'daily', label: 'Daily' },
@@ -18,14 +17,17 @@ const tabs = [
 ]
 
 export default function SalesAnalytics() {
+  const { salesAnalytics, storeComparison, categorySales, kpi: kpiData } = useDemo()
   const [period, setPeriod] = useState('daily')
-  const data = salesAnalytics[period]
+  const data = salesAnalytics[period] ?? []
 
-  const totalRevenue = period === 'daily'
-    ? data.reduce((s, d) => s + d.revenue, 0)
-    : period === 'weekly'
-    ? data.reduce((s, d) => s + d.revenue, 0)
-    : kpiData.revenue.value
+  // All three headline figures are summed over the SAME selected period.
+  // Previously only revenue was period-scoped while profit/orders came from the
+  // 30-day KPI block, which with real data could show profit exceeding revenue.
+  const sum = (key) => data.reduce((s, d) => s + (Number(d[key]) || 0), 0)
+  const totalRevenue = sum('revenue')
+  const totalProfit = sum('profit')
+  const totalOrders = sum('orders')
 
   return (
     <div>
@@ -49,9 +51,9 @@ export default function SalesAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <KpiCard title="Revenue" value={totalRevenue} change={kpiData.revenue.change} trend="up" icon={DollarSign} delay={0} />
-        <KpiCard title="Profit" value={kpiData.profit.value} change={kpiData.profit.change} trend="down" icon={TrendingUp} delay={0.05} />
-        <KpiCard title="Orders" value={kpiData.orders.value} change={kpiData.orders.change} trend="up" icon={ShoppingCart} format="number" delay={0.1} />
+        <KpiCard title="Revenue" value={totalRevenue} change={kpiData.revenue.change} trend={kpiData.revenue.trend} icon={DollarSign} delay={0} />
+        <KpiCard title="Profit" value={totalProfit} change={kpiData.profit.change} trend={kpiData.profit.trend} icon={TrendingUp} delay={0.05} />
+        <KpiCard title="Orders" value={totalOrders} change={kpiData.orders.change} trend={kpiData.orders.trend} icon={ShoppingCart} format="number" delay={0.1} />
         <KpiCard title="Growth Rate" value={12.4} change={2.1} trend="up" icon={BarChart3} format="percent" delay={0.15} />
       </div>
 

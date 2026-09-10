@@ -16,6 +16,11 @@ class Sale(Base, TimestampMixin):
         nullable=False,
         index=True,
     )
+    customer_id: Mapped[int | None] = mapped_column(
+        ForeignKey("customers.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     sale_number: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     sale_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     total_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0, nullable=False)
@@ -23,11 +28,13 @@ class Sale(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(String(32), default="completed", nullable=False)
 
     store: Mapped["Store"] = relationship(back_populates="sales")
+    customer: Mapped["Customer | None"] = relationship(back_populates="sales")
     items: Mapped[list["SaleItem"]] = relationship(
         back_populates="sale",
         cascade="all, delete-orphan",
     )
 
 
+from app.models.customer import Customer  # noqa: E402
 from app.models.sale_item import SaleItem  # noqa: E402
 from app.models.store import Store  # noqa: E402

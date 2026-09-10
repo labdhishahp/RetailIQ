@@ -4,9 +4,11 @@ import PageHeader from '../components/ui/PageHeader'
 import KpiCard from '../components/ui/KpiCard'
 import Card from '../components/ui/Card'
 import StatusChip from '../components/ui/StatusChip'
-import { customers, formatCurrency } from '../data/mockData'
+import { formatCurrency } from '../data/mockData'
+import { useDemo } from '../context/DemoContext'
 
 export default function Customers() {
+  const { customers } = useDemo()
   const [search, setSearch] = useState('')
   const [segmentFilter, setSegmentFilter] = useState('all')
 
@@ -16,7 +18,7 @@ export default function Customers() {
       const matchSegment = segmentFilter === 'all' || c.segment === segmentFilter
       return matchSearch && matchSegment
     })
-  }, [search, segmentFilter])
+  }, [customers, search, segmentFilter])
 
   const stats = {
     total: customers.length,

@@ -1,289 +1,209 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
-import {
-  kpiData as initialKpi,
-  revenueTrend as initialRevenueTrend,
-  monthlySales as initialMonthlySales,
-  inventoryTrend as initialInventoryTrend,
-  topProducts as initialTopProducts,
-  criticalAlerts as initialAlerts,
-  recentRecommendations as initialRecommendations,
-  inventoryData as initialInventory,
-  notifications as initialNotifications,
-  decisionHistory as initialDecisions,
-  reports as initialReports,
-  products as initialProducts,
-  shampooInvestigationResult,
-} from '../data/mockData'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import * as api from '../api/retail'
+import { simulationDefaults } from '../data/mockData'
 
+// Application data layer. Every dataset here comes from the FastAPI backend;
+// nothing is mocked. The provider is mounted inside the auth guard so requests
+// always carry a token.
 const DemoContext = createContext(null)
 
-let notificationId = 100
-let decisionId = 100
-let reportId = 100
+let toastId = 0
+
+// Zeroed shapes so components can render during the first load without
+// null-guards on every field.
+const EMPTY_KPI = {
+  revenue: { value: 0, change: 0, trend: 'up' },
+  orders: { value: 0, change: 0, trend: 'up' },
+  profit: { value: 0, change: 0, trend: 'up' },
+  healthScore: { value: 0, change: 0, trend: 'up' },
+}
+
+const EMPTY_INVENTORY = {
+  summary: { totalSKUs: 0, totalValue: 0, turnoverRate: 0, fillRate: 0 },
+  lowStock: [], deadStock: [], overstock: [], reorderSuggestions: [],
+  warehouses: [], heatmap: [],
+}
 
 export function DemoProvider({ children }) {
-  const [kpi, setKpi] = useState(initialKpi)
-  const [revenueTrend, setRevenueTrend] = useState(initialRevenueTrend)
-  const [monthlySales, setMonthlySales] = useState(initialMonthlySales)
-  const [inventoryTrend, setInventoryTrend] = useState(initialInventoryTrend)
-  const [topProducts, setTopProducts] = useState(initialTopProducts)
-  const [criticalAlerts, setCriticalAlerts] = useState(initialAlerts)
-  const [recentRecommendations, setRecentRecommendations] = useState(initialRecommendations)
-  const [inventory, setInventory] = useState(initialInventory)
-  const [products, setProducts] = useState(initialProducts)
-  const [notifications, setNotifications] = useState(initialNotifications)
-  const [decisions, setDecisions] = useState(initialDecisions)
-  const [reports, setReports] = useState(initialReports)
+  const [kpi, setKpi] = useState(EMPTY_KPI)
+  const [revenueTrend, setRevenueTrend] = useState([])
+  const [monthlySales, setMonthlySales] = useState([])
+  const [inventoryTrend, setInventoryTrend] = useState([])
+  const [topProducts, setTopProducts] = useState([])
+  const [products, setProducts] = useState([])
+  const [inventory, setInventory] = useState(EMPTY_INVENTORY)
+  const [storeComparison, setStoreComparison] = useState([])
+  const [categorySales, setCategorySales] = useState([])
+  const [customers, setCustomers] = useState([])
+  const [campaigns, setCampaigns] = useState([])
+  const [campaignPerformance, setCampaignPerformance] = useState([])
+  const [salesAnalytics, setSalesAnalytics] = useState({ daily: [], weekly: [], monthly: [] })
+  const [recommendations, setRecommendations] = useState([])
+  const [decisions, setDecisions] = useState([])
+  const [alerts, setAlerts] = useState([])
+  const [reports, setReports] = useState([])
+
   const [toasts, setToasts] = useState([])
-  const [simulationPhase, setSimulationPhase] = useState('idle') // idle | running | complete
-  const [investigationComplete, setInvestigationComplete] = useState(false)
-  const livePulseRef = useRef(null)
+  const [dataLoading, setDataLoading] = useState(true)
+  const [dataError, setDataError] = useState(null)
+  const [simulationPhase, setSimulationPhase] = useState('idle')
+  const [simulationResult, setSimulationResult] = useState(null)
+  const mounted = useRef(true)
+
+  // StrictMode mounts, unmounts and remounts in development. The ref must be
+  // re-armed on mount, otherwise it stays false after the simulated unmount and
+  // every subsequent setState is discarded — leaving the UI stuck on "loading".
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false }
+  }, [])
+
+  // ---- toasts --------------------------------------------------------
 
   const pushToast = useCallback((toast) => {
-    const id = ++notificationId
+    const id = ++toastId
     setToasts((prev) => [...prev, { id, ...toast }])
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, toast.duration || 5000)
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), toast.duration || 5000)
   }, [])
 
-  const addNotification = useCallback((notification) => {
-    const id = ++notificationId
-    setNotifications((prev) => [{ id, read: false, ...notification }, ...prev])
-    pushToast({
-      title: notification.title,
-      message: notification.message,
-      type: notification.type || 'info',
-    })
+  // ---- load ----------------------------------------------------------
+
+  const refreshData = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setDataLoading(true)
+    try {
+      const d = await api.loadRetailData()
+      if (!mounted.current) return
+      setKpi(d.kpi); setRevenueTrend(d.revenueTrend); setMonthlySales(d.monthlySales)
+      setInventoryTrend(d.inventoryTrend); setTopProducts(d.topProducts)
+      setProducts(d.products); setInventory(d.inventory)
+      setStoreComparison(d.storeComparison); setCategorySales(d.categorySales)
+      setCustomers(d.customers); setCampaigns(d.campaigns)
+      setCampaignPerformance(d.campaignPerformance); setSalesAnalytics(d.salesAnalytics)
+      setRecommendations(d.recommendations); setDecisions(d.decisions)
+      setAlerts(d.alerts); setReports(d.reports)
+      setDataError(null)
+    } catch (err) {
+      if (mounted.current) setDataError(err.message || 'Unable to reach the RetailIQ API')
+    } finally {
+      if (mounted.current) setDataLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { refreshData() }, [refreshData])
+
+  // ---- notifications -------------------------------------------------
+
+  const notifications = useMemo(
+    () => alerts.map((a) => ({
+      id: a.id, title: a.title, message: a.message, time: a.time, read: a.read, type: a.type,
+    })),
+    [alerts],
+  )
+  const criticalAlerts = useMemo(
+    () => alerts.filter((a) => a.type === 'critical' || a.type === 'warning'),
+    [alerts],
+  )
+  const recentRecommendations = useMemo(
+    () => recommendations.filter((r) => r.status === 'pending').slice(0, 3),
+    [recommendations],
+  )
+
+  const markNotificationRead = useCallback(async (id) => {
+    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, read: true } : a)))
+    try { await api.markAlertRead(id) } catch { /* optimistic; refreshed next load */ }
+  }, [])
+
+  const markAllNotificationsRead = useCallback(async () => {
+    setAlerts((prev) => prev.map((a) => ({ ...a, read: true })))
+    try { await api.markAllAlertsRead() } catch { /* optimistic */ }
+  }, [])
+
+  const addNotification = useCallback((n) => {
+    pushToast({ title: n.title, message: n.message, type: n.type || 'info' })
   }, [pushToast])
 
-  const markNotificationRead = useCallback((id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    )
-  }, [])
+  // ---- actions -------------------------------------------------------
 
-  const markAllNotificationsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-  }, [])
-
-  const onInvestigationComplete = useCallback(() => {
-    setInvestigationComplete(true)
-    addNotification({
-      title: 'AI Investigation Complete',
-      message: 'Shampoo sales analysis ready — review recommendation in Copilot',
-      time: 'Just now',
-      type: 'success',
+  const acceptRecommendation = useCallback(async (id, status = 'accepted', note) => {
+    const updated = await api.actOnRecommendation(id, status, note)
+    setRecommendations((prev) => prev.map((r) => (r.id === id ? updated : r)))
+    const [freshDecisions, freshRecs] = await Promise.all([
+      api.getDecisions(), api.getRecommendations(),
+    ])
+    setDecisions(freshDecisions)
+    setRecommendations(freshRecs)
+    pushToast({
+      title: status === 'accepted' ? 'Recommendation accepted' : 'Recommendation dismissed',
+      message: updated.title,
+      type: status === 'accepted' ? 'success' : 'info',
     })
-  }, [addNotification])
+    return updated
+  }, [pushToast])
 
-  const runSimulation = useCallback(() => {
-    if (simulationPhase === 'running') return
+  const regenerateRecommendations = useCallback(async () => {
+    const fresh = await api.generateRecommendations()
+    setRecommendations(fresh)
+    pushToast({ title: 'Recommendations refreshed',
+      message: `${fresh.length} open recommendation(s) from live data`, type: 'success' })
+    return fresh
+  }, [pushToast])
+
+  const runSimulation = useCallback(async (scenario) => {
     setSimulationPhase('running')
-
-    addNotification({
-      title: 'Simulation Started',
-      message: 'Modeling "Refresh & Save" bundle campaign impact...',
-      time: 'Just now',
-      type: 'info',
-    })
-
-    setTimeout(() => {
-      setKpi((prev) => ({
-        revenue: { value: Math.round(prev.revenue.value * 1.05), change: 5.0, trend: 'up' },
-        orders: { value: Math.round(prev.orders.value * 1.18), change: 18.0, trend: 'up' },
-        profit: { value: Math.round(prev.profit.value * 0.98), change: -2.0, trend: 'down' },
-        healthScore: { value: 91, change: 4.6, trend: 'up' },
-      }))
-
-      setRevenueTrend((prev) => {
-        const updated = [...prev]
-        const last = { ...updated[updated.length - 1] }
-        last.revenue = Math.round(last.revenue * 1.05)
-        last.profit = Math.round(last.profit * 0.98)
-        last.orders = Math.round(last.orders * 1.18)
-        updated[updated.length - 1] = last
-        return updated
-      })
-
-      setMonthlySales((prev) => {
-        const updated = [...prev]
-        const last = { ...updated[updated.length - 1] }
-        last.sales = Math.round(last.sales * 1.18)
-        updated[updated.length - 1] = last
-        return updated
-      })
-
-      setInventoryTrend((prev) => {
-        const updated = [...prev]
-        const last = { ...updated[updated.length - 1] }
-        last.stock = Math.round(last.stock * 0.76)
-        last.turnover = Math.round(last.turnover * 1.15 * 10) / 10
-        updated[updated.length - 1] = last
-        return updated
-      })
-
-      setTopProducts((prev) =>
-        prev.map((p) =>
-          p.name.includes('Shampoo')
-            ? { ...p, growth: 18.0, sales: Math.round(p.sales * 1.18), revenue: Math.round(p.revenue * 1.05), stock: 98 }
-            : p
-        )
-      )
-
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === 'PRD-001'
-            ? { ...p, stock: 98, status: 'low_stock' }
-            : p
-        )
-      )
-
-      setInventory((prev) => {
-        const shampooLowStock = {
-          id: 'PRD-001',
-          name: 'Premium Shampoo 500ml',
-          current: 98,
-          reorder: 150,
-          daysLeft: 6,
-        }
-        const existingLow = prev.lowStock.filter((i) => i.id !== 'PRD-001')
-        return {
-          ...prev,
-          summary: { ...prev.summary, fillRate: 92.4, turnoverRate: 5.8 },
-          lowStock: [shampooLowStock, ...existingLow],
-          reorderSuggestions: prev.reorderSuggestions.map((r) =>
-            r.id === 'PRD-001' ? { ...r, urgency: 'critical', qty: 400 } : r
-          ),
-        }
-      })
-
-      setCriticalAlerts((prev) => [
-        {
-          id: ++notificationId,
-          type: 'warning',
-          title: 'Shampoo stockout projected in 6 days',
-          description: 'Campaign simulation shows accelerated depletion — reorder recommended',
-          time: 'Just now',
-        },
-        ...prev,
-      ])
-
-      setRecentRecommendations((prev) => [
-        {
-          id: ++notificationId,
-          title: 'Execute "Refresh & Save" bundle campaign',
-          impact: '+18% sales · +5% revenue',
-          confidence: 89,
-          priority: 'high',
-        },
-        ...prev.slice(0, 2),
-      ])
-
-      const newDecision = {
-        id: `DEC-${++decisionId}`,
-        question: 'Why are shampoo sales decreasing?',
-        recommendation: shampooInvestigationResult.suggestedCampaign,
-        status: 'accepted',
-        outcome: 'Simulation validated: +18% sales, +5% revenue, stockout in 6 days without reorder',
-        roi: 340,
-        confidence: 89,
-        date: new Date().toISOString().split('T')[0],
-        impact: '+18% sales · +5% revenue',
-        isNew: true,
+    pushToast({ title: 'Simulation started', message: 'Modelling scenario against live sales…', type: 'info' })
+    try {
+      const payload = scenario ?? {
+        name: 'Refresh & Save bundle', discount_pct: 15,
+        duration_days: 28, category: 'Personal Care', extra_spend: 0,
       }
-      setDecisions((prev) => [newDecision, ...prev])
-
-      const newReport = {
-        id: `RPT-${++reportId}`,
-        title: 'Shampoo Campaign Simulation Report',
-        type: 'simulation',
-        date: new Date().toISOString().split('T')[0],
-        status: 'generating',
-        aiSummary: null,
-        isNew: true,
-      }
-      setReports((prev) => [newReport, ...prev])
-
-      addNotification({
-        title: 'Simulation Complete',
-        message: 'Sales +18% · Revenue +5% · Profit -2% · Stockout in 6 days',
-        time: 'Just now',
-        type: 'success',
-      })
-
-      addNotification({
-        title: 'Inventory Alert',
-        message: 'Premium Shampoo 500ml projected stockout in 6 days',
-        time: 'Just now',
-        type: 'warning',
-      })
-
-      setTimeout(() => {
-        setReports((prev) =>
-          prev.map((r) =>
-            r.id === newReport.id
-              ? {
-                  ...r,
-                  status: 'ready',
-                  aiSummary:
-                    'Campaign simulation confirms +18% sales lift and +5% revenue growth. Margin compression of 2% offset by volume gains. Shampoo inventory will reach stockout in 6 days — immediate reorder of 400 units recommended.',
-                }
-              : r
-          )
-        )
-        addNotification({
-          title: 'Report Generated',
-          message: 'Shampoo Campaign Simulation Report is ready to download',
-          time: 'Just now',
-          type: 'info',
-        })
-      }, 3500)
-
+      const result = await api.runSimulation(payload)
+      if (!mounted.current) return null
+      setSimulationResult(result)
       setSimulationPhase('complete')
-    }, 2800)
-  }, [simulationPhase, addNotification])
+      pushToast({ title: 'Simulation complete', message: result.summary?.slice(0, 120), type: 'success' })
+      await refreshData({ silent: true })
+      return result
+    } catch (err) {
+      if (mounted.current) setSimulationPhase('idle')
+      pushToast({ title: 'Simulation failed', message: err.message, type: 'error' })
+      throw err
+    }
+  }, [pushToast, refreshData])
 
-  useEffect(() => {
-    livePulseRef.current = setInterval(() => {
-      setKpi((prev) => ({
-        ...prev,
-        revenue: {
-          ...prev.revenue,
-          value: prev.revenue.value + Math.floor(Math.random() * 800 + 200),
-        },
-        orders: {
-          ...prev.orders,
-          value: prev.orders.value + Math.floor(Math.random() * 3 + 1),
-        },
-      }))
-    }, 12000)
+  const generateReport = useCallback(async (kind = 'weekly') => {
+    pushToast({ title: 'Generating report', message: 'Compiling from live business data…', type: 'info' })
+    const report = await api.generateReport(kind)
+    setReports((prev) => [{ ...report, isNew: true }, ...prev])
+    pushToast({
+      title: report.status === 'ready' ? 'Report ready' : 'Report failed',
+      message: report.title,
+      type: report.status === 'ready' ? 'success' : 'error',
+    })
+    return report
+  }, [pushToast])
 
-    return () => clearInterval(livePulseRef.current)
-  }, [])
+  const refreshAlerts = useCallback(async () => {
+    const fresh = await api.evaluateAlerts()
+    setAlerts(fresh)
+    pushToast({ title: 'Alerts re-evaluated', message: `${fresh.length} active alert(s)`, type: 'info' })
+    return fresh
+  }, [pushToast])
 
   const value = {
-    kpi,
-    revenueTrend,
-    monthlySales,
-    inventoryTrend,
-    topProducts,
-    criticalAlerts,
-    recentRecommendations,
-    inventory,
-    products,
-    notifications,
-    decisions,
-    reports,
-    toasts,
-    simulationPhase,
-    investigationComplete,
-    addNotification,
-    markNotificationRead,
-    markAllNotificationsRead,
-    onInvestigationComplete,
-    runSimulation,
-    pushToast,
+    // datasets
+    kpi, revenueTrend, monthlySales, inventoryTrend, topProducts,
+    products, inventory, storeComparison, categorySales,
+    customers, campaigns, campaignPerformance, salesAnalytics,
+    recommendations, decisions, reports, alerts,
+    notifications, criticalAlerts, recentRecommendations,
+    simulationDefaults,
+    // state
+    toasts, dataLoading, dataError, simulationPhase, simulationResult,
+    // actions
+    refreshData, pushToast, addNotification,
+    markNotificationRead, markAllNotificationsRead,
+    acceptRecommendation, regenerateRecommendations,
+    runSimulation, generateReport, refreshAlerts,
   }
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>

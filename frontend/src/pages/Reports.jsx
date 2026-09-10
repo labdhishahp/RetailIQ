@@ -6,6 +6,7 @@ import Card from '../components/ui/Card'
 import StatusChip from '../components/ui/StatusChip'
 import Button from '../components/ui/Button'
 import { useDemo } from '../context/DemoContext'
+import { downloadReport } from '../api/retail'
 
 function GeneratingAnimation() {
   return (
@@ -35,27 +36,36 @@ function GeneratingAnimation() {
   )
 }
 
-export default function Reports() {
-  const { reports, addNotification } = useDemo()
-  const [generating, setGenerating] = useState(false)
+const REPORT_KINDS = [
+  { id: 'weekly', label: 'Weekly summary' },
+  { id: 'monthly', label: 'Monthly performance' },
+  { id: 'inventory', label: 'Inventory health' },
+  { id: 'campaign', label: 'Campaign ROI' },
+  { id: 'customer', label: 'Customer segmentation' },
+]
 
-  const handleGenerate = () => {
+export default function Reports() {
+  const { reports, generateReport, pushToast } = useDemo()
+  const [generating, setGenerating] = useState(false)
+  const [kind, setKind] = useState('weekly')
+
+  const handleGenerate = async () => {
     setGenerating(true)
-    addNotification({
-      title: 'Report Generation Started',
-      message: 'Compiling executive summary from live business data...',
-      time: 'Just now',
-      type: 'info',
-    })
-    setTimeout(() => {
+    try {
+      await generateReport(kind)
+    } catch (err) {
+      pushToast({ title: 'Report failed', message: err.message, type: 'error' })
+    } finally {
       setGenerating(false)
-      addNotification({
-        title: 'Report Generated',
-        message: 'Weekly Executive Summary has been updated',
-        time: 'Just now',
-        type: 'success',
-      })
-    }, 4000)
+    }
+  }
+
+  const handleDownload = async (report, fmt) => {
+    try {
+      await downloadReport(report.dbId, report.id, fmt)
+    } catch (err) {
+      pushToast({ title: 'Download failed', message: err.message, type: 'error' })
+    }
   }
 
   return (
@@ -64,9 +74,18 @@ export default function Reports() {
         title="Reports"
         subtitle="Executive summaries and AI-generated insights"
         actions={
-          <Button icon={FileText} size="sm" onClick={handleGenerate} disabled={generating}>
-            {generating ? 'Generating...' : 'Generate Report'}
-          </Button>
+          <div className="flex gap-2">
+            <select
+              value={kind} onChange={(e) => setKind(e.target.value)}
+              aria-label="Report type"
+              className="px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {REPORT_KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
+            </select>
+            <Button icon={FileText} size="sm" onClick={handleGenerate} disabled={generating}>
+              {generating ? 'Generating…' : 'Generate report'}
+            </Button>
+          </div>
         }
       />
 
@@ -148,11 +167,19 @@ export default function Reports() {
                 {!report.aiSummary && report.status === 'generating' && <GeneratingAnimation />}
 
                 <div className="flex gap-2 mt-auto">
-                  <Button variant="secondary" icon={Download} size="sm" className="flex-1" disabled={report.status !== 'ready'}>
-                    PDF
+                  <Button
+                    variant="secondary" icon={Download} size="sm" className="flex-1"
+                    disabled={report.status !== 'ready'}
+                    onClick={() => handleDownload(report, 'csv')}
+                  >
+                    CSV
                   </Button>
-                  <Button variant="secondary" icon={Download} size="sm" className="flex-1" disabled={report.status !== 'ready'}>
-                    Excel
+                  <Button
+                    variant="secondary" icon={Download} size="sm" className="flex-1"
+                    disabled={report.status !== 'ready'}
+                    onClick={() => handleDownload(report, 'json')}
+                  >
+                    JSON
                   </Button>
                 </div>
               </Card>

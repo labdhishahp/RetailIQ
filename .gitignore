@@ -14,7 +14,10 @@ dist-ssr
 
 # Python
 backend/venv/
-backend/.env
+# Environment files (any location/variant); template stays tracked
+.env
+.env.*
+!.env.example
 __pycache__/
 *.pyc
 
@@ -28,3 +31,14 @@ __pycache__/
 *.njsproj
 *.sln
 *.sw?
+
+# Python tooling
+.pytest_cache/
+.ruff_cache/
+
+# Local test scaffolding
+frontend/.e2e*.mjs
+frontend/.diag.mjs
+frontend/.kb.mjs
+frontend/.copilot*.mjs
+frontend/.e2e-state.json

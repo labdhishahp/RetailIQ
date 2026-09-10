@@ -5,7 +5,10 @@ import KpiCard from '../components/ui/KpiCard'
 import Card from '../components/ui/Card'
 import StatusChip from '../components/ui/StatusChip'
 import Button from '../components/ui/Button'
+import { useState } from 'react'
 import { useDemo } from '../context/DemoContext'
+import { useAuth } from '../context/AuthContext'
+import { createPurchaseOrder } from '../api/retail'
 import { formatCurrency } from '../data/mockData'
 
 function HeatmapCell({ value }) {
@@ -28,15 +31,35 @@ function HeatmapCell({ value }) {
 }
 
 export default function Inventory() {
-  const { inventory, simulationPhase, pushToast } = useDemo()
+  const { inventory, simulationPhase, pushToast, refreshData } = useDemo()
+  const { canWrite } = useAuth()
+  const [ordering, setOrdering] = useState(null)
+
+  const raiseOrder = async (item) => {
+    if (!item.product_id || !item.store_id) {
+      pushToast({ title: 'Cannot raise order', message: 'This row has no linked stock location.', type: 'error' })
+      return
+    }
+    setOrdering(item.id + item.store_id)
+    try {
+      const po = await createPurchaseOrder({
+        product_id: item.product_id, store_id: item.store_id, quantity: item.qty,
+        note: `Raised from reorder suggestion (${item.urgency})`,
+      })
+      pushToast({ title: `Purchase order ${po.reference} placed`,
+        message: `${item.qty} units of ${item.name}`, type: 'success' })
+      await refreshData({ silent: true })
+    } catch (err) {
+      pushToast({ title: 'Could not raise order', message: err.message, type: 'error' })
+    } finally {
+      setOrdering(null)
+    }
+  }
   const { summary, lowStock, deadStock, overstock, reorderSuggestions, warehouses, heatmap } = inventory
 
-  const handleRefresh = () => {
-    pushToast({
-      title: 'Inventory Refreshed',
-      message: 'Stock levels synced from warehouse systems',
-      type: 'success',
-    })
+  const handleRefresh = async () => {
+    await refreshData({ silent: true })
+    pushToast({ title: 'Inventory refreshed', message: 'Stock levels reloaded from the database', type: 'success' })
   }
 
   return (
@@ -44,7 +67,7 @@ export default function Inventory() {
       <PageHeader
         title="Inventory Health"
         subtitle="Monitor stock levels, turnover, and reorder needs"
-        actions={<Button icon={RefreshCw} size="sm" onClick={handleRefresh}>Refresh Data</Button>}
+        actions={<Button icon={RefreshCw} size="sm" onClick={handleRefresh}>Refresh data</Button>}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
@@ -136,26 +159,52 @@ export default function Inventory() {
             <AnimatePresence mode="popLayout">
               {reorderSuggestions.map((item) => (
                 <motion.div
-                  key={item.id}
+                  key={`${item.id}-${item.store_id ?? 'x'}`}
                   layout
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className={`flex items-center justify-between p-3 rounded-xl border ${
-                    item.id === 'PRD-001' && simulationPhase === 'complete'
+                  className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${
+                    item.urgency === 'critical'
                       ? 'border-danger/40 bg-red-50/30 dark:bg-red-950/20'
                       : 'border-slate-200 dark:border-slate-700'
                   }`}
                 >
-                  <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.name}</p>
                     <p className="text-xs text-slate-500">Order {item.qty} units · {formatCurrency(item.cost)}</p>
                   </div>
-                  <StatusChip status={item.urgency} label={item.urgency} />
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <StatusChip status={item.urgency} label={item.urgency} />
+                    {canWrite && (
+                      <Button
+                        size="sm" variant="secondary"
+                        onClick={() => raiseOrder(item)}
+                        disabled={ordering === item.id + item.store_id}
+                      >
+                        {ordering === item.id + item.store_id ? 'Placing…' : 'Reorder'}
+                      </Button>
+                    )}
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
-          <Button className="w-full mt-4" size="sm">Approve All Reorders</Button>
+          {canWrite && reorderSuggestions.length > 0 && (
+            <Button
+              className="w-full mt-4" size="sm"
+              disabled={!!ordering}
+              onClick={async () => {
+                for (const item of reorderSuggestions) {
+                  // sequential so a failure stops the batch rather than
+                  // half-placing orders with no feedback
+                  // eslint-disable-next-line no-await-in-loop
+                  await raiseOrder(item)
+                }
+              }}
+            >
+              Approve all reorders
+            </Button>
+          )}
         </Card>
 
         <Card>

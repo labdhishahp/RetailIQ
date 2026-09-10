@@ -1,10 +1,17 @@
 import { motion } from 'framer-motion'
 import {
-  Brain, TrendingDown, Package, DollarSign, Megaphone, Users, Sparkles, CheckCircle2, Loader2,
+  Brain, TrendingDown, Package, DollarSign, Megaphone, Users, Sparkles, CheckCircle2,
+  Loader2, BookOpen, Warehouse, Wrench,
 } from 'lucide-react'
 
 const iconMap = {
-  Brain, TrendingDown, Package, DollarSign, Megaphone, Users, Sparkles,
+  Brain, TrendingDown, Package, DollarSign, Megaphone, Users, Sparkles, BookOpen, Warehouse,
+}
+
+const severityDot = {
+  critical: 'bg-red-500',
+  warning: 'bg-amber-500',
+  info: 'bg-emerald-500',
 }
 
 export default function AgentCard({ agent, status, progress, index }) {
@@ -47,6 +54,32 @@ export default function AgentCard({ agent, status, progress, index }) {
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{agent.task}</p>
+
+          {/* Real findings returned by the backend once the agent has run */}
+          {isComplete && agent.findings?.length > 0 && (
+            <ul className="mt-2.5 space-y-1.5">
+              {agent.findings.slice(0, 3).map((f, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${severityDot[f.severity] || 'bg-slate-400'}`} />
+                  <span className="text-xs text-slate-600 dark:text-slate-300 leading-snug">{f.statement}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {isComplete && agent.toolsCalled?.length > 0 && (
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+              <Wrench size={11} className="text-slate-400" />
+              {agent.toolsCalled.map((t) => (
+                <span key={t} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                  {t}
+                </span>
+              ))}
+              {agent.duration ? (
+                <span className="text-[10px] text-slate-400 ml-auto">{agent.duration}ms</span>
+              ) : null}
+            </div>
+          )}
 
           {(isActive || isComplete) && (
             <div className="mt-3">

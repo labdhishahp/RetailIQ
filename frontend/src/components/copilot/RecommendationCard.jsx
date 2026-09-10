@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import {
-  AlertTriangle, Target, TrendingUp, Shield, Package, Megaphone, ListChecks, BarChart3, Play, CheckCircle2,
+  AlertTriangle, Target, TrendingUp, Shield, Package, Megaphone, ListChecks, BarChart3,
+  Play, CheckCircle2, BookOpen,
 } from 'lucide-react'
 import Card from '../ui/Card'
 import Button from '../ui/Button'
@@ -36,7 +37,11 @@ export default function RecommendationCard({ result, simulationPhase }) {
         </div>
         <div>
           <h3 className="font-bold text-slate-900 dark:text-white">Final Recommendation</h3>
-          <p className="text-xs text-slate-500">Synthesized from 6 agent analyses</p>
+          <p className="text-xs text-slate-500">
+            Synthesised from {result.agents?.length ?? 0} agent analyses
+            {result.elapsedMs ? ` · ${(result.elapsedMs / 1000).toFixed(1)}s` : ''}
+            {result.synthesis ? ` · ${result.synthesis === 'llm' ? 'LLM' : 'rule'} synthesis` : ''}
+          </p>
         </div>
         <div className="ml-auto">
           <StatusChip status={result.priority} label={`${result.priority} Priority`} />
@@ -85,6 +90,33 @@ export default function RecommendationCard({ result, simulationPhase }) {
           ))}
         </ul>
       </Card>
+
+      {result.citations?.length > 0 && (
+        <Card className="!p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen size={16} className="text-violet-500" />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Retrieved sources
+            </p>
+          </div>
+          <div className="space-y-2">
+            {result.citations.map((c, i) => (
+              <div key={`${c.chunk_id}-${i}`} className="p-2.5 rounded-xl bg-violet-50/50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{c.title}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-300">
+                    {c.doc_type}
+                  </span>
+                  {c.similarity != null && (
+                    <span className="text-[10px] text-slate-400 ml-auto">match {(c.similarity * 100).toFixed(0)}%</span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mt-1 leading-snug">{c.excerpt?.slice(0, 220)}…</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <Card className="!p-4">
         <div className="flex items-center gap-2 mb-3">

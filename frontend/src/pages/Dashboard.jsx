@@ -1,4 +1,4 @@
-import { DollarSign, ShoppingCart, TrendingUp, Activity, AlertTriangle, ArrowRight, Sparkles } from 'lucide-react'
+import { DollarSign, ShoppingCart, TrendingUp, Activity, AlertTriangle, ArrowRight, Sparkles, Check, X, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/ui/PageHeader'
@@ -13,7 +13,9 @@ import PieChartComponent from '../components/charts/PieChartComponent'
 import GaugeChart from '../components/charts/GaugeChart'
 import LineChartComponent from '../components/charts/LineChartComponent'
 import { useDemo } from '../context/DemoContext'
-import { storeComparison, categorySales, formatCurrency, formatPercent } from '../data/mockData'
+import { useAuth } from '../context/AuthContext'
+import { useState } from 'react'
+import { formatCurrency, formatPercent } from '../data/mockData'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -26,7 +28,26 @@ export default function Dashboard() {
     criticalAlerts,
     recentRecommendations,
     simulationPhase,
+    storeComparison,
+    categorySales,
+    dataLoading,
+    dataError,
+    acceptRecommendation,
+    regenerateRecommendations,
   } = useDemo()
+  const { canWrite } = useAuth()
+  const [busyRec, setBusyRec] = useState(null)
+
+  const act = async (rec, status) => {
+    setBusyRec(rec.id)
+    try { await acceptRecommendation(rec.id, status) } finally { setBusyRec(null) }
+  }
+
+  const badge = dataLoading
+    ? { text: 'Loading live data…', tone: 'amber' }
+    : dataError
+    ? { text: 'Data unavailable', tone: 'amber' }
+    : { text: 'Live data', tone: 'emerald' }
 
   return (
     <div>
@@ -38,10 +59,16 @@ export default function Dashboard() {
             <motion.div
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
+              className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border ${
+                badge.tone === 'emerald'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
+                  : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
+              }`}
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">Live data</span>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${badge.tone === 'emerald' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              <span className={`text-xs font-medium ${badge.tone === 'emerald' ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                {badge.text}
+              </span>
             </motion.div>
             <Button icon={Sparkles} onClick={() => navigate('/copilot')}>
               Ask AI Copilot
@@ -165,25 +192,62 @@ export default function Dashboard() {
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <Sparkles size={16} className="text-primary" />
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Recent AI Recommendations</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Open recommendations</h3>
+            {canWrite && (
+              <button
+                onClick={regenerateRecommendations}
+                aria-label="Re-run recommendation rules"
+                className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+              >
+                <RefreshCw size={14} />
+              </button>
+            )}
           </div>
           <div className="space-y-3">
             <AnimatePresence mode="popLayout">
+              {recentRecommendations.length === 0 && !dataLoading && (
+                <p className="text-sm text-slate-400">
+                  No open recommendations — the rules found nothing actionable in current data.
+                </p>
+              )}
               {recentRecommendations.map((rec) => (
                 <motion.div
                   key={rec.id}
                   layout
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/20 transition-all cursor-pointer"
-                  onClick={() => navigate('/copilot')}
+                  className="p-3 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/20 transition-all"
                 >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{rec.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{rec.impact} · {rec.confidence}% confidence</p>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{rec.title}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{rec.impact} · {rec.confidence}% confidence</p>
+                      <p className="text-xs text-slate-400 mt-1 leading-snug">{rec.rationale}</p>
+                    </div>
+                    <StatusChip status={rec.priority} />
                   </div>
-                  <StatusChip status={rec.priority} />
-                  <ArrowRight size={14} className="text-slate-400" />
+                  {canWrite && (
+                    <div className="flex items-center gap-2 mt-2.5">
+                      <Button
+                        size="sm" icon={Check} disabled={busyRec === rec.id}
+                        onClick={() => act(rec, 'accepted')}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm" variant="secondary" icon={X} disabled={busyRec === rec.id}
+                        onClick={() => act(rec, 'rejected')}
+                      >
+                        Dismiss
+                      </Button>
+                      <button
+                        onClick={() => navigate('/copilot')}
+                        className="ml-auto text-xs text-primary hover:underline inline-flex items-center gap-1"
+                      >
+                        Investigate <ArrowRight size={12} />
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>

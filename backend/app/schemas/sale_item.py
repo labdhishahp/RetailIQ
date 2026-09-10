@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.common import Money
 from app.schemas.product import ProductRead
 
 
@@ -10,9 +11,9 @@ class SaleItemBase(BaseModel):
     sale_id: int
     product_id: int
     quantity: int = Field(..., gt=0)
-    unit_price: Decimal = Field(..., ge=0)
-    unit_cost: Decimal = Field(..., ge=0)
-    line_total: Decimal = Field(..., ge=0)
+    unit_price: Money = Field(..., ge=0)
+    unit_cost: Money = Field(..., ge=0)
+    line_total: Money = Field(..., ge=0)
 
 
 class SaleItemCreate(SaleItemBase):
@@ -21,9 +22,9 @@ class SaleItemCreate(SaleItemBase):
 
 class SaleItemUpdate(BaseModel):
     quantity: int | None = Field(default=None, gt=0)
-    unit_price: Decimal | None = Field(default=None, ge=0)
-    unit_cost: Decimal | None = Field(default=None, ge=0)
-    line_total: Decimal | None = Field(default=None, ge=0)
+    unit_price: Money | None = Field(default=None, ge=0)
+    unit_cost: Money | None = Field(default=None, ge=0)
+    line_total: Money | None = Field(default=None, ge=0)
 
 
 class SaleItemRead(SaleItemBase):

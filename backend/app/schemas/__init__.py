@@ -1,4 +1,6 @@
+from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignUpdate
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.customer import CustomerCreate, CustomerRead, CustomerUpdate
 from app.schemas.inventory import (
     InventoryCreate,
     InventoryDetailRead,
@@ -16,9 +18,15 @@ from app.schemas.sale_item import (
 from app.schemas.store import StoreCreate, StoreRead, StoreUpdate
 
 __all__ = [
+    "CampaignCreate",
+    "CampaignRead",
+    "CampaignUpdate",
     "CategoryCreate",
     "CategoryRead",
     "CategoryUpdate",
+    "CustomerCreate",
+    "CustomerRead",
+    "CustomerUpdate",
     "InventoryCreate",
     "InventoryDetailRead",
     "InventoryRead",
