@@ -20,10 +20,11 @@ backend/app/
 │       └── routes/            # auth, copilot, insights, operations
 ├── agents/
 │   ├── tools.py               # the tool surface agents may call (all hit the DB)
-│   ├── base.py                # Agent, Finding, AgentResult
+│   ├── base.py                # Agent, Finding, AgentResult, grounding check
+│   ├── runtime.py             # model tool loop: call, observe, continue, conclude
 │   ├── specialists.py         # sales, inventory, pricing, campaign, customer, store, knowledge
-│   ├── planner.py             # intent -> agent plan (LLM or rules)
-│   └── orchestrator.py        # runs the plan, synthesises the result
+│   ├── planner.py             # first-round routing and focus extraction (rules)
+│   └── orchestrator.py        # lead investigator: delegates, follows up, concludes
 ├── core/                      # settings, password hashing, JWT
 ├── database/                  # base, session, init_db, seed_knowledge
 ├── models/                    # 22 ORM models
@@ -57,23 +58,35 @@ Sign in with `admin@retailiq.app` / `RetailIQ2026!` (also `manager@` and
 
 ## The copilot
 
-`POST /api/v1/copilot/query` runs a real pipeline:
+`POST /api/v1/copilot/query` runs an investigation:
 
-1. **Planner** picks specialists from the question's intent and extracts a
-   focus term by matching against actual product and category names.
-2. **Specialists** each call tools in `agents/tools.py`. Every tool is a SQL
-   query against the operational tables, so findings always cite real numbers.
-3. **Knowledge agent** retrieves supporting passages from the document corpus.
-4. **Synthesis** ranks findings by relevance to the question, then severity,
-   and composes the root cause, evidence, impact and next steps.
+1. **Lead investigator** (`orchestrator.py`) delegates to specialists with an
+   objective and optional product focus, reads what they report, and decides
+   whether to send follow-ups before concluding.
+2. **Specialists** (`specialists.py`) each own a toolset from `agents/tools.py`
+   — every tool is a SQL query with a strict JSON schema — and choose their
+   next call from the previous result: e.g. Sales finds the worst-declining
+   product, then `product_drilldown` separates a demand, price, stock or
+   single-store cause. Calls outside an agent's toolset are refused.
+3. **Grounding**: every number in a finding is checked against that agent's
+   tool output (`verified: true/false`); unverified claims in the conclusion
+   are listed in `trace.unverifiedClaims`.
+4. **Synthesis**: confidence, revenue and inventory impact are always computed
+   from tool output; the narrative comes from the lead's conclusion, with any
+   missing or malformed field filled by the rule composer.
 
-Conversations, messages and per-agent traces (tools called, duration,
-findings) are persisted.
+The response includes `trace` (mode, each delegation with its round and
+reason, tool-call and token counts) and per-agent `steps` (tool, arguments,
+result summary, timing). Per-agent runs are persisted in `agent_runs`.
 
-**`LLM_API_KEY` is optional.** Without it, planning uses an intent classifier
-and synthesis uses the rule composer — the data analysis is identical either
-way. With a key, the LLM handles planning and narrative on top of the same
-findings.
+**Two modes, same agents.** With an Anthropic `LLM_API_KEY` the lead and the
+specialists are model tool loops (`runtime.py`, default `claude-opus-5-5`,
+server-side refusal fallback on), bounded by `AGENT_DEADLINE_SECONDS`,
+`AGENT_MAX_TURNS`, `LEAD_MAX_TURNS` and `LEAD_MAX_DELEGATIONS`; parallel
+delegations run concurrently on separate sessions. Without a key — or if the
+model is unreachable — the lead and specialists run on rule policies that are
+also observation-driven: round 2 is chosen from the leads round 1 raised, and
+the knowledge search is phrased from what was found.
 
 ## RAG
 

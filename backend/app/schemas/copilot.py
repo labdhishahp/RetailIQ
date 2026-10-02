@@ -17,6 +17,13 @@ class AgentTrace(BaseModel):
     duration: int
     findings: list[dict]
     toolsCalled: list[str]
+    # Execution trace: which round sent this agent, why, and each tool call it chose.
+    agent: str | None = None
+    objective: str = ""
+    round: int = 1
+    mode: str = "rules"
+    steps: list[dict] = []
+    fallback: str | None = None
 
 
 class Citation(BaseModel):
@@ -42,6 +49,7 @@ class InvestigationResult(BaseModel):
     agents: list[AgentTrace]
     citations: list[Citation] = []
     plan: dict
+    trace: dict = {}
     elapsedMs: int
     synthesis: str
 

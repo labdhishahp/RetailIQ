@@ -70,8 +70,8 @@ export default function AgentCard({ agent, status, progress, index }) {
           {isComplete && agent.toolsCalled?.length > 0 && (
             <div className="mt-2 flex items-center gap-1.5 flex-wrap">
               <Wrench size={11} className="text-faint" />
-              {agent.toolsCalled.map((t) => (
-                <span key={t} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-muted">
+              {agent.toolsCalled.map((t, i) => (
+                <span key={`${t}-${i}`} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-muted">
                   {t}
                 </span>
               ))}

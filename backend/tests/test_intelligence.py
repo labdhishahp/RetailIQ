@@ -140,7 +140,8 @@ def test_every_tool_executes(SessionLocal, seeded, tool):
     """A broken tool must fail loudly here, not silently inside an agent."""
     db = SessionLocal()
     try:
-        kwargs = {"query": "stock"} if tool == "search_knowledge_base" else {}
+        kwargs = {"search_knowledge_base": {"query": "stock"},
+                  "product_drilldown": {"sku": "T-001"}}.get(tool, {})
         result = call_tool(db, tool, **kwargs)
         assert result is not None
     finally:

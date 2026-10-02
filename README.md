@@ -12,7 +12,7 @@ frontend/   React 19 + Vite 8 SPA
     ▼
 backend/    FastAPI + SQLAlchemy 2.0
     │       ├── analytics    aggregate queries
-    │       ├── agents       planner → specialists → synthesis
+    │       ├── agents       lead investigator ⇄ specialists ⇄ tools
     │       ├── RAG          pgvector + full-text hybrid retrieval
     │       └── operations   writes, stock ledger, purchase orders
     │  psycopg2 over TLS
@@ -78,15 +78,19 @@ purchase order restocks. Product status follows its actual stock position.
 
 ## The copilot
 
-Not scripted. `POST /api/v1/copilot/query` plans which specialists to run from
-the question's intent, each specialist calls tools that are SQL queries against
-the operational tables, a knowledge agent retrieves supporting passages, and
-the findings are synthesised into a root cause, evidence, impact and next
-steps. Conversations and per-agent traces (tools called, timings, findings)
-are persisted.
+`POST /api/v1/copilot/query` runs an investigation. A lead investigator
+delegates to specialists (sales, inventory, pricing, campaign, customer, store,
+knowledge), reads their findings, and sends follow-ups when the evidence points
+somewhere specific. Each specialist chooses its own tool calls — SQL queries
+against the operational tables — from what the previous call returned, e.g.
+drilling into the product behind a revenue drop to separate a demand, price,
+stock or single-store cause. Every number in a finding is checked against the
+tool output it came from. The response carries the full trace: rounds, the
+reason for each delegation, and every tool call with its arguments.
 
-`LLM_API_KEY` is **optional**: without it the pipeline runs identically and
-only the prose is composed by rules instead of a model.
+With an Anthropic `LLM_API_KEY` the lead and specialists are model-driven tool
+loops (bounded by turn and time budgets). Without a key the same agents run on
+rule policies that are also observation-driven; the model is never required.
 
 ## Database
 
@@ -103,7 +107,7 @@ corpus. See `backend/README.md` for seeding and migration commands.
 ## Testing
 
 ```bash
-cd backend && pytest -q     # 67 tests
+cd backend && pytest -q     # 75 tests
 cd frontend && npm run lint && npm run build
 ```
 
@@ -120,7 +124,7 @@ Set these environment variables in the Vercel project:
 | `DATABASE_URL` | yes | Supabase transaction pooler (port 6543) |
 | `JWT_SECRET` | yes | `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
 | `CORS_ORIGINS` | recommended | your deployed origin |
-| `LLM_API_KEY` | no | enables LLM planning and narrative |
+| `LLM_API_KEY` | no | makes the lead investigator and specialists model-driven |
 | `LLM_PROVIDER` / `LLM_MODEL` | no | `anthropic` (default) or `openai` |
 
 No `.env` is deployed; real environment variables take precedence over the file.

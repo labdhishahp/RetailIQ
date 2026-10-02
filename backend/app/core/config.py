@@ -39,14 +39,26 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
 
     # --- LLM (optional) --------------------------------------------------
-    # When llm_api_key is set the copilot uses the provider for planning and
-    # narrative synthesis. Without it the agent pipeline still runs end to end
-    # using its deterministic planner; only the prose is templated.
+    # With an Anthropic key the lead investigator and every specialist are
+    # model-driven: they choose tools, read the results and decide whether to
+    # dig further. Without one the same agents run on rule policies that are
+    # also observation-driven; only the reasoning is by rule.
     llm_provider: str = "anthropic"
     llm_api_key: str = ""
     llm_model: str = "claude-opus-5-5"
     llm_base_url: str = ""
     llm_timeout_seconds: int = 60
+    llm_fallbacks: bool = True          # server-side refusal fallback (Claude API only)
+    llm_lead_effort: str = "medium"     # lead investigator: plans, re-plans, concludes
+    llm_agent_effort: str = "low"       # specialists: narrow tool loops
+
+    # --- agent budgets ----------------------------------------------------
+    # The deployment's function limit is 60s; the deadline leaves room to
+    # conclude and persist after the last delegation returns.
+    agent_deadline_seconds: int = 40
+    agent_max_turns: int = 5            # model turns per specialist
+    lead_max_turns: int = 4             # model turns for the lead investigator
+    lead_max_delegations: int = 8
 
     # --- analytics cache -------------------------------------------------
     analytics_cache_seconds: int = 60
