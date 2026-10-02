@@ -129,16 +129,21 @@ def inventory_status(db: Session, *, name_contains: str = "") -> list[dict]:
 def pricing_position(db: Session, *, name_contains: str = "") -> list[dict]:
     """Price, cost and realised margin — flags discounting against list price."""
     now = _anchor(db)
+    # The 90-day window has to filter the sale lines themselves; a date
+    # condition on an outer join to Sale would still count every line.
+    recent = (
+        select(SaleItem.product_id,
+               func.avg(SaleItem.unit_price).label("avg_price"),
+               func.sum(SaleItem.quantity).label("units"))
+        .join(Sale, Sale.id == SaleItem.sale_id)
+        .where(Sale.sale_date >= now - timedelta(days=90))
+        .group_by(SaleItem.product_id)
+        .subquery()
+    )
     q = (
-        select(
-            Product.sku, Product.name, Product.price, Product.cost,
-            func.coalesce(func.avg(SaleItem.unit_price), 0),
-            func.coalesce(func.sum(SaleItem.quantity), 0),
-        )
-        .select_from(Product)
-        .outerjoin(SaleItem, SaleItem.product_id == Product.id)
-        .outerjoin(Sale, (Sale.id == SaleItem.sale_id) & (Sale.sale_date >= now - timedelta(days=90)))
-        .group_by(Product.sku, Product.name, Product.price, Product.cost)
+        select(Product.sku, Product.name, Product.price, Product.cost,
+               func.coalesce(recent.c.avg_price, 0), func.coalesce(recent.c.units, 0))
+        .outerjoin(recent, recent.c.product_id == Product.id)
     )
     if name_contains:
         q = q.where(Product.name.ilike(f"%{name_contains}%"))
@@ -179,6 +184,11 @@ def customer_health(db: Session) -> dict:
         .where(Customer.status.in_(["at_risk", "churned"]))
         .order_by(Customer.total_spent.desc()).limit(8)
     ).all()
+    # Totals come from their own aggregate: the list above is only the top 8.
+    count, spend = db.execute(
+        select(func.count(), func.coalesce(func.sum(Customer.total_spent), 0))
+        .where(Customer.status.in_(["at_risk", "churned"]))
+    ).one()
     total_spend = sum(_f(r[2]) for r in rows) or 1
     return {
         "segments": [{"segment": r[0], "customers": int(r[1]),
@@ -186,7 +196,8 @@ def customer_health(db: Session) -> dict:
                       "spend_share_pct": round(_f(r[2]) / total_spend * 100, 1)} for r in rows],
         "at_risk": [{"code": r[0], "name": r[1], "spend": round(_f(r[2]), 2),
                      "last_order": str(r[3]) if r[3] else None} for r in at_risk],
-        "at_risk_count": len(at_risk),
+        "at_risk_count": int(count or 0),
+        "at_risk_spend": round(_f(spend), 2),
     }
 
 

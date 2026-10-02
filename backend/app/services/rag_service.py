@@ -2,7 +2,7 @@
 
 import logging
 
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models.document import Document, DocumentChunk
@@ -77,19 +77,20 @@ class RagService:
                 "similarity": round(1.0 - float(r.distance), 4),
             }
 
+        # Built as an expression rather than raw SQL so it targets the same
+        # schema as the vector leg, and run in a savepoint so a failure here
+        # cannot abort the caller's transaction.
+        vector = func.to_tsvector("english", DocumentChunk.content)
+        tsquery = func.plainto_tsquery("english", query)
+        rank_col = func.ts_rank(vector, tsquery).label("rank")
         try:
-            ts_rows = db.execute(
-                text("""
-                    SELECT c.id,
-                           ts_rank(to_tsvector('english', c.content),
-                                   plainto_tsquery('english', :q)) AS rank
-                      FROM document_chunks c
-                     WHERE to_tsvector('english', c.content) @@ plainto_tsquery('english', :q)
-                     ORDER BY rank DESC
-                     LIMIT :n
-                """),
-                {"q": query, "n": limit * 3},
-            ).all()
+            with db.begin_nested():
+                ts_rows = db.execute(
+                    select(DocumentChunk.id, rank_col)
+                    .where(vector.op("@@")(tsquery))
+                    .order_by(rank_col.desc())
+                    .limit(limit * 3)
+                ).all()
             for rank, row in enumerate(ts_rows):
                 if row.id in fused:
                     fused[row.id]["score"] += 1.0 / (k + rank + 1)

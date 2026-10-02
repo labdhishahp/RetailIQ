@@ -165,7 +165,10 @@ export default function RecommendationCard({ result, simulationPhase }) {
               </motion.div>
             ) : (
               <Button
-                onClick={runSimulation}
+                // Call without arguments: passing the handler directly hands the
+                // click event to runSimulation as its scenario. Failures are
+                // already reported by runSimulation's toast.
+                onClick={() => runSimulation().catch(() => {})}
                 disabled={simulationPhase === 'running'}
                 icon={Play}
                 className="whitespace-nowrap"

@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # using its deterministic planner; only the prose is templated.
     llm_provider: str = "anthropic"
     llm_api_key: str = ""
-    llm_model: str = "claude-sonnet-5"
+    llm_model: str = "claude-opus-5-5"
     llm_base_url: str = ""
     llm_timeout_seconds: int = 60
 

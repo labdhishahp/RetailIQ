@@ -147,7 +147,7 @@ class CustomerAgent(Agent):
         health = self._call(db, r, "customer_health")
         r.data = health
         if health["at_risk_count"]:
-            exposure = sum(c["spend"] for c in health["at_risk"])
+            exposure = health["at_risk_spend"]
             r.findings.append(Finding(
                 f"{health['at_risk_count']} customers are at risk or churned, representing "
                 f"{exposure:,.0f} in lifetime spend.",
