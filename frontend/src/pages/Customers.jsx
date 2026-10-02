@@ -41,19 +41,19 @@ export default function Customers() {
       <Card className="!p-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
             <input
               type="text"
               placeholder="Search customers..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-xl field"
             />
           </div>
           <select
             value={segmentFilter}
             onChange={(e) => setSegmentFilter(e.target.value)}
-            className="px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="px-3 py-2 text-sm rounded-xl field"
           >
             <option value="all">All Segments</option>
             <option value="VIP">VIP</option>
@@ -67,15 +67,15 @@ export default function Customers() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+              <tr className="border-b border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800/50">
                 {['Customer', 'Email', 'Segment', 'Orders', 'Total Spent', 'Last Order', 'Status'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map((customer) => (
-                <tr key={customer.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <tr key={customer.id} className="border-b border-slate-100 dark:border-slate-600 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
@@ -83,15 +83,15 @@ export default function Customers() {
                       </div>
                       <div>
                         <p className="font-medium text-slate-900 dark:text-white">{customer.name}</p>
-                        <p className="text-xs text-slate-400">{customer.id}</p>
+                        <p className="text-xs text-faint">{customer.id}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{customer.email}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{customer.email}</td>
                   <td className="px-4 py-3"><StatusChip status={customer.segment} /></td>
                   <td className="px-4 py-3 font-medium">{customer.orders}</td>
                   <td className="px-4 py-3 font-medium">{formatCurrency(customer.spent)}</td>
-                  <td className="px-4 py-3 text-slate-500">{customer.lastOrder}</td>
+                  <td className="px-4 py-3 text-muted">{customer.lastOrder}</td>
                   <td className="px-4 py-3"><StatusChip status={customer.status} /></td>
                 </tr>
               ))}

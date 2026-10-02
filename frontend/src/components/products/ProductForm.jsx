@@ -70,7 +70,7 @@ export default function ProductForm({ open, onClose, onSubmit, categories, produ
       <form onSubmit={submit} className="space-y-3">
         {FIELDS.map((f) => (
           <div key={f.key} className={editing && f.key === 'sku' ? 'opacity-50' : ''}>
-            <label htmlFor={`pf-${f.key}`} className="block text-xs font-medium text-slate-500 mb-1">
+            <label htmlFor={`pf-${f.key}`} className="block text-xs font-medium text-muted mb-1">
               {f.label}{f.required ? ' *' : ''}
             </label>
             <input
@@ -78,17 +78,17 @@ export default function ProductForm({ open, onClose, onSubmit, categories, produ
               disabled={editing && f.key === 'sku'}
               value={form[f.key]}
               onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-sm rounded-xl field disabled:cursor-not-allowed"
             />
           </div>
         ))}
 
         <div>
-          <label htmlFor="pf-category" className="block text-xs font-medium text-slate-500 mb-1">Category *</label>
+          <label htmlFor="pf-category" className="block text-xs font-medium text-muted mb-1">Category *</label>
           <select
             id="pf-category" required value={form.category_id}
             onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-            className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full px-3 py-2 text-sm rounded-xl field"
           >
             <option value="">Select…</option>
             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -96,7 +96,7 @@ export default function ProductForm({ open, onClose, onSubmit, categories, produ
         </div>
 
         {form.price && form.cost && Number(form.price) > 0 ? (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-faint">
             Margin: {(((Number(form.price) - Number(form.cost)) / Number(form.price)) * 100).toFixed(1)}%
           </p>
         ) : null}

@@ -12,7 +12,7 @@ function GeneratingAnimation() {
   return (
     <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 mb-4 flex-1">
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-sm text-muted">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
@@ -78,7 +78,7 @@ export default function Reports() {
             <select
               value={kind} onChange={(e) => setKind(e.target.value)}
               aria-label="Report type"
-              className="px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="px-3 py-2 text-sm rounded-xl field"
             >
               {REPORT_KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
             </select>
@@ -105,7 +105,7 @@ export default function Reports() {
               />
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">Generating executive report...</p>
-                <p className="text-xs text-slate-500">Analyzing KPIs, inventory, campaigns, and AI decisions</p>
+                <p className="text-xs text-muted">Analyzing KPIs, inventory, campaigns, and AI decisions</p>
               </div>
             </div>
             <div className="mt-3 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -148,7 +148,7 @@ export default function Reports() {
                 </div>
 
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{report.title}</h3>
-                <p className="text-xs text-slate-500 mb-3">{report.type.charAt(0).toUpperCase() + report.type.slice(1)} · {report.date}</p>
+                <p className="text-xs text-muted mb-3">{report.type.charAt(0).toUpperCase() + report.type.slice(1)} · {report.date}</p>
 
                 {report.aiSummary && (
                   <motion.div
@@ -160,7 +160,7 @@ export default function Reports() {
                       <Sparkles size={12} className="text-violet-500" />
                       <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">AI Summary</span>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{report.aiSummary}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{report.aiSummary}</p>
                   </motion.div>
                 )}
 

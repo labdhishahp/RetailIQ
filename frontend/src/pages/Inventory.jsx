@@ -12,17 +12,23 @@ import { createPurchaseOrder } from '../api/retail'
 import { formatCurrency } from '../data/mockData'
 
 function HeatmapCell({ value }) {
+  // The tint is composited over an opaque light base rather than the page
+  // background, so a cell looks the same in both themes and the number on it
+  // always has a fixed, legible contrast. Blending against the dark surface
+  // instead produced 1.5:1 cells.
   const intensity = value / 100
-  const bg = value >= 80 ? `rgba(34, 197, 94, ${intensity * 0.6})`
-    : value >= 50 ? `rgba(245, 158, 11, ${intensity * 0.6})`
-    : `rgba(239, 68, 68, ${intensity * 0.6})`
+  const [r, g, b] = value >= 80 ? [34, 197, 94]
+    : value >= 50 ? [245, 158, 11]
+    : [239, 68, 68]
+  const alpha = 0.18 + intensity * 0.55
+  const mix = (c) => Math.round(c * alpha + 255 * (1 - alpha))
 
   return (
     <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className="w-full aspect-square rounded-md flex items-center justify-center text-[10px] font-medium text-slate-700 dark:text-slate-300"
-      style={{ backgroundColor: bg }}
+      className="w-full aspect-square rounded-md flex items-center justify-center text-[10px] font-semibold"
+      style={{ backgroundColor: `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`, color: '#1e293b' }}
       title={`${value}%`}
     >
       {value}
@@ -99,7 +105,7 @@ export default function Inventory() {
                 >
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
-                    <p className="text-xs text-slate-500">{item.current} units · Reorder at {item.reorder}</p>
+                    <p className="text-xs text-muted">{item.current} units · Reorder at {item.reorder}</p>
                   </div>
                   <motion.span
                     key={item.daysLeft}
@@ -125,7 +131,7 @@ export default function Inventory() {
               <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-red-50/50 dark:bg-red-950/20 border border-red-100 dark:border-red-900">
                 <div>
                   <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
-                  <p className="text-xs text-slate-500">{item.units} units · {item.daysIdle} days idle</p>
+                  <p className="text-xs text-muted">{item.units} units · {item.daysIdle} days idle</p>
                 </div>
                 <span className="text-xs font-bold text-danger">{formatCurrency(item.value)}</span>
               </div>
@@ -143,7 +149,7 @@ export default function Inventory() {
               <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900">
                 <div>
                   <p className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</p>
-                  <p className="text-xs text-slate-500">{item.current} current · {item.optimal} optimal</p>
+                  <p className="text-xs text-muted">{item.current} current · {item.optimal} optimal</p>
                 </div>
                 <span className="text-xs font-bold text-primary">+{item.excess} excess</span>
               </div>
@@ -166,12 +172,12 @@ export default function Inventory() {
                   className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${
                     item.urgency === 'critical'
                       ? 'border-danger/40 bg-red-50/30 dark:bg-red-950/20'
-                      : 'border-slate-200 dark:border-slate-700'
+                      : 'border-slate-200 dark:border-slate-600'
                   }`}
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.name}</p>
-                    <p className="text-xs text-slate-500">Order {item.qty} units · {formatCurrency(item.cost)}</p>
+                    <p className="text-xs text-muted">Order {item.qty} units · {formatCurrency(item.cost)}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <StatusChip status={item.urgency} label={item.urgency} />
@@ -214,7 +220,7 @@ export default function Inventory() {
               <div key={wh.name}>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-sm font-medium text-slate-900 dark:text-white">{wh.name}</span>
-                  <span className="text-xs text-slate-500">{wh.skus} SKUs · {formatCurrency(wh.value)}</span>
+                  <span className="text-xs text-muted">{wh.skus} SKUs · {formatCurrency(wh.value)}</span>
                 </div>
                 <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <motion.div
@@ -224,7 +230,7 @@ export default function Inventory() {
                     className={`h-full rounded-full ${wh.capacity > 80 ? 'bg-warning' : 'bg-primary'}`}
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">{wh.capacity}% capacity</p>
+                <p className="text-[10px] text-faint mt-0.5">{wh.capacity}% capacity</p>
               </div>
             ))}
           </div>
@@ -233,14 +239,14 @@ export default function Inventory() {
 
       <Card>
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Inventory Heatmap</h3>
-        <p className="text-xs text-slate-500 mb-4">Stock health by category over 8 weeks (percentage of optimal levels)</p>
+        <p className="text-xs text-muted mb-4">Stock health by category over 8 weeks (percentage of optimal levels)</p>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr>
-                <th className="text-left text-xs font-medium text-slate-500 pb-2 pr-4">Category</th>
+                <th className="text-left text-xs font-medium text-muted pb-2 pr-4">Category</th>
                 {['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'].map((w) => (
-                  <th key={w} className="text-center text-xs font-medium text-slate-500 pb-2 px-1">{w}</th>
+                  <th key={w} className="text-center text-xs font-medium text-muted pb-2 px-1">{w}</th>
                 ))}
               </tr>
             </thead>

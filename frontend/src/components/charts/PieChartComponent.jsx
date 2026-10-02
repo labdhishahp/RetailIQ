@@ -20,7 +20,7 @@ export default function PieChartComponent({ data, height = 280 }) {
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }} />
+        <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--tooltip-border)', backgroundColor: 'var(--tooltip-bg)', color: 'var(--text-strong)', fontSize: 12 }} />
         <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
       </PieChart>
     </ResponsiveContainer>

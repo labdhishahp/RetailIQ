@@ -67,8 +67,8 @@ export default function DecisionHistory() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <StatusChip status={decision.status} />
-                          <span className="text-xs text-slate-400">{decision.date}</span>
-                          <span className="text-xs font-mono text-slate-400">{decision.id}</span>
+                          <span className="text-xs text-faint">{decision.date}</span>
+                          <span className="text-xs font-mono text-faint">{decision.id}</span>
                         </div>
 
                         <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
@@ -76,31 +76,31 @@ export default function DecisionHistory() {
                         </h3>
 
                         <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 mt-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Recommendation</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-faint mb-1">Recommendation</p>
                           <p className="text-sm text-slate-700 dark:text-slate-300">{decision.recommendation}</p>
                         </div>
 
                         {decision.outcome && (
                           <div className="mt-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Outcome</p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">{decision.outcome}</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-faint mb-1">Outcome</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300">{decision.outcome}</p>
                           </div>
                         )}
                       </div>
 
                       <div className="flex sm:flex-col gap-3 sm:items-end sm:text-right flex-shrink-0">
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Impact</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">Impact</p>
                           <p className="text-sm font-bold text-primary">{decision.impact}</p>
                         </div>
                         {decision.roi !== null && (
                           <div>
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">ROI</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">ROI</p>
                             <p className="text-sm font-bold text-success">{decision.roi}%</p>
                           </div>
                         )}
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Confidence</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">Confidence</p>
                           <p className="text-sm font-bold text-slate-900 dark:text-white">{decision.confidence}%</p>
                         </div>
                       </div>

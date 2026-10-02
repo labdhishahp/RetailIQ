@@ -37,7 +37,7 @@ export default function GaugeChart({ value, label = 'Health Score', height = 200
         <ResponsiveContainer width="100%" height={height}>
           <RadialBarChart cx="50%" cy="50%" innerRadius="70%" outerRadius="100%" barSize={12} data={data} startAngle={180} endAngle={0}>
             <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-            <RadialBar background={{ fill: '#f1f5f9' }} dataKey="value" cornerRadius={6} isAnimationActive animationDuration={1200} />
+            <RadialBar background={{ fill: 'var(--gauge-track)' }} dataKey="value" cornerRadius={6} isAnimationActive animationDuration={1200} />
           </RadialBarChart>
         </ResponsiveContainer>
       </motion.div>
@@ -50,7 +50,7 @@ export default function GaugeChart({ value, label = 'Health Score', height = 200
         >
           {displayValue}
         </motion.span>
-        <span className="text-xs text-slate-500">{label}</span>
+        <span className="text-xs text-muted">{label}</span>
       </div>
     </div>
   )

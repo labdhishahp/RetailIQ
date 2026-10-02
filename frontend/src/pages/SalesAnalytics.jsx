@@ -42,7 +42,7 @@ export default function SalesAnalytics() {
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
               period === tab.id
                 ? 'bg-white dark:bg-slate-900 text-primary shadow-sm'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                : 'text-muted hover:text-slate-700 dark:hover:text-slate-300'
             }`}
           >
             {tab.label}
@@ -100,7 +100,7 @@ export default function SalesAnalytics() {
                     style={{ width: `${Math.min(store.growth * 4, 100)}%` }}
                   />
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">{formatCurrency(store.revenue)} · {store.orders.toLocaleString()} orders</p>
+                <p className="text-xs text-muted mt-0.5">{formatCurrency(store.revenue)} · {store.orders.toLocaleString()} orders</p>
               </div>
             ))}
           </div>

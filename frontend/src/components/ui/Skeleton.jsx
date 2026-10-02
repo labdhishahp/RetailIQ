@@ -11,7 +11,7 @@ export default function Skeleton({ className = '', variant = 'rect' }) {
 
 export function SkeletonCard() {
   return (
-    <div className="rounded-2xl p-5 bg-white dark:bg-slate-900 shadow-premium border border-slate-200/60 dark:border-slate-700/60 space-y-3">
+    <div className="rounded-2xl p-5 bg-white dark:bg-slate-900 shadow-premium border border-slate-200/60 dark:border-slate-600/60 space-y-3">
       <Skeleton className="h-4 w-24" variant="text" />
       <Skeleton className="h-8 w-32" variant="text" />
       <Skeleton className="h-3 w-20" variant="text" />

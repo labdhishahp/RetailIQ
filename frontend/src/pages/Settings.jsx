@@ -139,13 +139,13 @@ export default function Settings() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{section.title}</h3>
-                <p className="text-xs text-slate-500">{section.description}</p>
+                <p className="text-xs text-muted">{section.description}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               {section.fields.map((field) => (
-                <div key={field.key} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                <div key={field.key} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-600 last:border-0">
                   <label htmlFor={`set-${field.key}`} className="text-sm text-slate-700 dark:text-slate-300">
                     {field.label}
                   </label>
@@ -165,7 +165,7 @@ export default function Settings() {
                       value={values[field.key] ?? field.default}
                       onChange={(e) => update(field.key, e.target.value)}
                       disabled={loading}
-                      className="px-3 py-1.5 text-sm rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="px-3 py-1.5 text-sm rounded-lg field"
                     >
                       {field.options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                     </select>

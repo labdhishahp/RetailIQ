@@ -141,11 +141,11 @@ export default function Dashboard() {
                   <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{product.name}</p>
-                    <p className="text-xs text-slate-500">{formatCurrency(product.revenue)}</p>
+                    <p className="text-xs text-muted">{formatCurrency(product.revenue)}</p>
                   </div>
                   <motion.span
                     key={product.growth}
-                    initial={{ scale: 1.2, color: '#22C55E' }}
+                    initial={{ scale: 1.2 }}
                     animate={{ scale: 1 }}
                     className={`text-xs font-medium ${product.growth >= 0 ? 'text-success' : 'text-danger'}`}
                   >
@@ -171,14 +171,14 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: -10, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700"
+                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-600"
                 >
                   <div className="flex items-start gap-2">
                     <StatusChip status={alert.type} />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900 dark:text-white">{alert.title}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{alert.description}</p>
-                      <p className="text-[10px] text-slate-400 mt-1">{alert.time}</p>
+                      <p className="text-xs text-muted mt-0.5">{alert.description}</p>
+                      <p className="text-[10px] text-faint mt-1">{alert.time}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -197,7 +197,7 @@ export default function Dashboard() {
               <button
                 onClick={regenerateRecommendations}
                 aria-label="Re-run recommendation rules"
-                className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                className="ml-auto p-1.5 rounded-lg text-faint hover:text-primary hover:bg-primary/10 transition-colors"
               >
                 <RefreshCw size={14} />
               </button>
@@ -206,7 +206,7 @@ export default function Dashboard() {
           <div className="space-y-3">
             <AnimatePresence mode="popLayout">
               {recentRecommendations.length === 0 && !dataLoading && (
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-faint">
                   No open recommendations — the rules found nothing actionable in current data.
                 </p>
               )}
@@ -216,13 +216,13 @@ export default function Dashboard() {
                   layout
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="p-3 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/20 transition-all"
+                  className="p-3 rounded-xl border border-slate-100 dark:border-slate-600 hover:border-primary/20 transition-all"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900 dark:text-white">{rec.title}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{rec.impact} · {rec.confidence}% confidence</p>
-                      <p className="text-xs text-slate-400 mt-1 leading-snug">{rec.rationale}</p>
+                      <p className="text-xs text-muted mt-0.5">{rec.impact} · {rec.confidence}% confidence</p>
+                      <p className="text-xs text-faint mt-1 leading-snug">{rec.rationale}</p>
                     </div>
                     <StatusChip status={rec.priority} />
                   </div>
@@ -268,11 +268,11 @@ export default function Dashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(action.path)}
-                className="p-4 rounded-xl text-left border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 group"
+                className="p-4 rounded-xl text-left border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-200 group"
               >
                 <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${action.color} mb-2 group-hover:scale-110 transition-transform`} />
                 <p className="text-sm font-medium text-slate-900 dark:text-white">{action.label}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{action.desc}</p>
+                <p className="text-xs text-muted mt-0.5">{action.desc}</p>
               </motion.button>
             ))}
           </div>

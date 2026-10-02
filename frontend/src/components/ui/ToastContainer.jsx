@@ -12,7 +12,7 @@ const icons = {
 const colors = {
   success: 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40',
   warning: 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40',
-  info: 'border-primary/20 bg-primary/5',
+  info: 'border-primary/30 bg-primary/5 dark:bg-primary/15 dark:border-primary/40',
   error: 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40',
 }
 
@@ -46,10 +46,10 @@ export default function ToastContainer() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">{toast.title}</p>
                   {toast.message && (
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{toast.message}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{toast.message}</p>
                   )}
                 </div>
-                <X size={14} className="text-slate-400 flex-shrink-0" />
+                <X size={14} className="text-faint flex-shrink-0" />
               </div>
             </motion.div>
           )

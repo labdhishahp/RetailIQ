@@ -1,8 +1,8 @@
 export default function Button({ children, variant = 'primary', size = 'md', className = '', icon: Icon, ...props }) {
   const variants = {
     primary: 'bg-primary hover:bg-primary-dark text-white shadow-sm shadow-primary/25',
-    secondary: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700',
-    ghost: 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800',
+    secondary: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700',
+    ghost: 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800',
     danger: 'bg-danger hover:bg-red-600 text-white',
     success: 'bg-success hover:bg-emerald-600 text-white',
   }

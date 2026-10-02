@@ -1,9 +1,18 @@
 @import "tailwindcss";
 
+/* Tailwind v4 resolves `dark:` against prefers-color-scheme by default.
+   This app toggles a `.dark` class on <html> (see ThemeContext), so the
+   variant must be redefined — without this every `dark:` utility in the
+   codebase is inert, which left dark text sitting on the dark background. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #2563eb;
   --color-primary-dark: #1d4ed8;
   --color-primary-light: #3b82f6;
+  /* Vivid values are kept for chart series and solid fills; the text-facing
+     values are overridden per theme below, because 40 of the 48 usages of
+     these tokens are text and #22c55e on white is only 2.3:1. */
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
@@ -12,6 +21,59 @@
   --color-border: #e2e8f0;
   --color-muted: #64748b;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Semantic colour roles.
+   Surfaces keep the existing slate (blue-tinted) identity; these tokens exist
+   so text, placeholders, borders and focus rings are defined once per theme
+   instead of being guessed per component. */
+:root {
+  --text-strong: #0f172a;   /* headings, table cells, input values */
+  --text-body: #334155;     /* body copy */
+  --text-muted: #52627a;    /* secondary text — AA on both light surfaces */
+  --text-faint: #64748b;    /* labels, timestamps, captions */
+  --placeholder: #64748b;   /* 4.9:1 on white — hints stay AA-legible */
+  --field-bg: #ffffff;
+  --field-border: #cbd5e1;
+  --field-border-hover: #94a3b8;
+  --focus-ring: rgba(37, 99, 235, 0.35);
+
+  /* Status colours legible as text on light surfaces (AA at normal size) */
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-danger: #b91c1c;
+
+  /* charts */
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #cbd5e1;
+  --gauge-track: #eef2f7;
+}
+
+.dark {
+  --text-strong: #f8fafc;
+  --text-body: #e2e8f0;
+  --text-muted: #b6c2d4;    /* ~7:1 on slate-900, replaces murky slate-500 */
+  --text-faint: #94a3b8;    /* ~6:1 on slate-900 */
+  --placeholder: #8b9ab0;
+  --primary-on-dark: #7fb0fb;   /* ~6.6:1 on slate-900; #2563eb is only 3.4:1 */
+  --field-bg: #1a2740;      /* lifted off the card so fields read as inputs */
+  --field-border: #3b4b66;
+  --field-border-hover: #55688a;
+  --focus-ring: rgba(96, 165, 250, 0.45);
+
+  /* Lifted for dark surfaces: the light-mode values are far too dark here */
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+
+  /* charts — grid must recede, axis labels must stay legible */
+  --chart-grid: #2b3a55;
+  --chart-axis: #a9b6ca;
+  --tooltip-bg: #16233b;
+  --tooltip-border: #3b4b66;
+  --gauge-track: #223049;
 }
 
 @layer base {
@@ -24,22 +86,138 @@
   }
 
   body {
-    @apply bg-background text-slate-900 font-sans;
+    @apply bg-background font-sans;
+    color: var(--text-strong);
   }
 
   .dark body,
   body.dark {
-    @apply bg-slate-950 text-slate-100;
+    @apply bg-slate-950;
+    color: var(--text-strong);
+  }
+
+  /* ---- form controls -------------------------------------------------
+     Previously none of the 22 inputs, selects or textareas set a text or
+     placeholder colour, so values inherited whatever the surrounding
+     surface used and placeholders fell back to the browser default —
+     unreadable against a dark field. These rules make every control
+     legible everywhere without touching the components. */
+  input,
+  select,
+  textarea {
+    color: var(--text-strong);
+    caret-color: var(--color-primary);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--placeholder);
+    opacity: 1;               /* Firefox dims placeholders by default */
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: var(--placeholder);
+  }
+
+  /* Native dropdown lists are painted by the OS and ignore the trigger's
+     colours, so they need to be set explicitly. */
+  select option {
+    background-color: var(--field-bg);
+    color: var(--text-strong);
+  }
+
+  input[type="search"]::-webkit-search-cancel-button {
+    filter: invert(0.45);
+    cursor: pointer;
+  }
+
+  /* Chrome paints autofilled fields with its own near-white background,
+     which hides light text on a dark field. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--text-strong);
+    -webkit-box-shadow: 0 0 0 1000px var(--field-bg) inset;
+    caret-color: var(--text-strong);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    color: var(--text-faint);
+    cursor: not-allowed;
+  }
+
+  ::selection {
+    background: rgba(37, 99, 235, 0.28);
+    color: var(--text-strong);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-light);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .recharts-legend-item-text {
+    color: var(--text-body) !important;
+  }
+
+  .recharts-default-tooltip {
+    background-color: var(--tooltip-bg) !important;
+    border-color: var(--tooltip-border) !important;
+    color: var(--text-strong) !important;
+  }
+
+  .recharts-tooltip-label,
+  .recharts-tooltip-item-list .recharts-tooltip-item-name,
+  .recharts-tooltip-item-list .recharts-tooltip-item-separator {
+    color: var(--text-body) !important;
+  }
+
+  .recharts-cartesian-axis-tick-value {
+    fill: var(--chart-axis);
   }
 }
 
 @layer utilities {
+  /* Text roles — use these instead of raw slate values so contrast is
+     correct in both themes. */
+  .text-strong { color: var(--text-strong); }
+  .text-body   { color: var(--text-body); }
+  .text-muted  { color: var(--text-muted); }
+  .text-faint  { color: var(--text-faint); }
+
+  /* One field treatment shared by every input, select and textarea. */
+  .field {
+    background-color: var(--field-bg);
+    border: 1px solid var(--field-border);
+    color: var(--text-strong);
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+
+  .field:hover:not(:disabled) {
+    border-color: var(--field-border-hover);
+  }
+
+  .field:focus,
+  .field:focus-visible {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
   .glass {
     @apply bg-white/70 backdrop-blur-xl border border-white/20;
   }
 
   .dark .glass {
-    @apply bg-slate-900/70 border-slate-700/50;
+    @apply bg-slate-900/70 border-slate-700/60;
   }
 
   .glass-card {
@@ -47,7 +225,7 @@
   }
 
   .dark .glass-card {
-    @apply bg-slate-900/80 border-slate-700/60;
+    @apply bg-slate-900/80 border-slate-600/50;
   }
 
   .shadow-premium {
@@ -59,9 +237,9 @@
 
   .dark .shadow-premium {
     box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.2),
-      0 4px 12px rgba(0, 0, 0, 0.3),
-      0 0 0 1px rgba(255, 255, 255, 0.05);
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.07);
   }
 
   .gradient-primary {
@@ -77,6 +255,10 @@
     scrollbar-color: #cbd5e1 transparent;
   }
 
+  .dark .scrollbar-thin {
+    scrollbar-color: #475569 transparent;
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -87,6 +269,13 @@
   }
 
   .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-slate-600;
+    @apply bg-slate-500 rounded-full;
   }
 }
+
+/* Unlayered, so it wins over Tailwind's utilities layer.
+   text-primary (#2563eb) is a background colour, not a text colour on a dark
+   surface — 3.4:1. Only the text usage is lifted; bg-primary is untouched so
+   white-on-primary keeps its contrast. */
+.dark .text-primary { color: var(--primary-on-dark); }
+.dark .hover\:text-primary:hover { color: var(--primary-on-dark); }

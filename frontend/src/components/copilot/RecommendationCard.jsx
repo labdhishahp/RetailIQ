@@ -20,7 +20,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
     { icon: Target, label: 'Business Impact', value: result.businessImpact, color: 'text-warning' },
     { icon: Shield, label: 'Risk Level', value: result.riskLevel, isChip: true },
     { icon: TrendingUp, label: 'Revenue Impact', value: formatCurrency(result.revenueImpact), color: result.revenueImpact < 0 ? 'text-danger' : 'text-success' },
-    { icon: Package, label: 'Inventory Impact', value: result.inventoryImpact, color: 'text-slate-600' },
+    { icon: Package, label: 'Inventory Impact', value: result.inventoryImpact, color: 'text-body' },
     { icon: Megaphone, label: 'Suggested Campaign', value: result.suggestedCampaign, color: 'text-primary' },
   ]
 
@@ -37,7 +37,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
         </div>
         <div>
           <h3 className="font-bold text-slate-900 dark:text-white">Final Recommendation</h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             Synthesised from {result.agents?.length ?? 0} agent analyses
             {result.elapsedMs ? ` · ${(result.elapsedMs / 1000).toFixed(1)}s` : ''}
             {result.synthesis ? ` · ${result.synthesis === 'llm' ? 'LLM' : 'rule'} synthesis` : ''}
@@ -60,7 +60,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
               <div className="flex items-start gap-3">
                 <section.icon size={16} className={`mt-0.5 flex-shrink-0 ${section.color}`} />
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{section.label}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">{section.label}</p>
                   {section.isChip ? (
                     <StatusChip status={section.value} label={section.value} />
                   ) : (
@@ -74,7 +74,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
       </div>
 
       <Card className="!p-4">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-3">Evidence</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-faint mb-3">Evidence</p>
         <ul className="space-y-2">
           {result.evidence.map((item, i) => (
             <motion.li
@@ -82,7 +82,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + i * 0.06 }}
-              className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
+              className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
               {item}
@@ -95,7 +95,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
         <Card className="!p-4">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen size={16} className="text-violet-500" />
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">
               Retrieved sources
             </p>
           </div>
@@ -108,10 +108,10 @@ export default function RecommendationCard({ result, simulationPhase }) {
                     {c.doc_type}
                   </span>
                   {c.similarity != null && (
-                    <span className="text-[10px] text-slate-400 ml-auto">match {(c.similarity * 100).toFixed(0)}%</span>
+                    <span className="text-[10px] text-faint ml-auto">match {(c.similarity * 100).toFixed(0)}%</span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 mt-1 leading-snug">{c.excerpt?.slice(0, 220)}…</p>
+                <p className="text-xs text-muted mt-1 leading-snug">{c.excerpt?.slice(0, 220)}…</p>
               </div>
             ))}
           </div>
@@ -121,7 +121,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
       <Card className="!p-4">
         <div className="flex items-center gap-2 mb-3">
           <ListChecks size={16} className="text-primary" />
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Next Steps</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">Next Steps</p>
         </div>
         <ol className="space-y-2">
           {result.nextSteps.map((step, i) => (
@@ -130,7 +130,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 + i * 0.06 }}
-              className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400"
+              className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
             >
               <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                 {i + 1}
@@ -150,7 +150,7 @@ export default function RecommendationCard({ result, simulationPhase }) {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-sm font-semibold text-slate-900 dark:text-white">Ready to validate this recommendation?</p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Run a what-if simulation to project sales, revenue, profit, and inventory impact across the business.
               </p>
             </div>

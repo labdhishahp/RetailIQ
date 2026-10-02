@@ -85,13 +85,13 @@ export default function Profile() {
                   { key: 'phone', label: 'Phone' },
                 ].map((f) => (
                   <div key={f.key}>
-                    <label htmlFor={`pf-${f.key}`} className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    <label htmlFor={`pf-${f.key}`} className="block text-[10px] font-semibold uppercase tracking-wider text-faint mb-1">
                       {f.label}
                     </label>
                     <input
                       id={`pf-${f.key}`} value={form[f.key]}
                       onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full px-3 py-2 text-sm rounded-xl field"
                     />
                   </div>
                 ))}
@@ -99,16 +99,16 @@ export default function Profile() {
             ) : (
               <>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">{user?.full_name}</h2>
-                <p className="text-sm text-slate-500 mt-1">{user?.job_title || '—'}</p>
+                <p className="text-sm text-muted mt-1">{user?.job_title || '—'}</p>
                 <div className="mt-3 flex justify-center">
                   <StatusChip status={user?.role === 'admin' ? 'accepted' : 'info'} label={user?.role} />
                 </div>
                 <div className="mt-6 space-y-3 text-left">
                   {details.map((d) => (
                     <div key={d.label} className="flex items-center gap-3">
-                      <d.icon size={15} className="text-slate-400 flex-shrink-0" />
+                      <d.icon size={15} className="text-faint flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-[10px] uppercase tracking-wider text-slate-400">{d.label}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-faint">{d.label}</p>
                         <p className="text-sm text-slate-700 dark:text-slate-300 truncate">{d.value}</p>
                       </div>
                     </div>
@@ -129,18 +129,18 @@ export default function Profile() {
           <Card>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Recent decisions</h3>
             {decisions.length === 0 ? (
-              <p className="text-sm text-slate-400">No decisions recorded yet. Accept a recommendation to start the log.</p>
+              <p className="text-sm text-faint">No decisions recorded yet. Accept a recommendation to start the log.</p>
             ) : (
               <div className="space-y-3">
                 {decisions.slice(0, 6).map((d) => (
                   <motion.div
                     key={d.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                    className="flex items-start gap-3 pb-3 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
+                    className="flex items-start gap-3 pb-3 border-b border-slate-100 dark:border-slate-600 last:border-0 last:pb-0"
                   >
                     <StatusChip status={d.status} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-slate-800 dark:text-slate-200 truncate">{d.question}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{d.date} · {d.impact}</p>
+                      <p className="text-xs text-faint mt-0.5">{d.date} · {d.impact}</p>
                     </div>
                   </motion.div>
                 ))}

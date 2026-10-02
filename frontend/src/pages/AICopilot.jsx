@@ -103,7 +103,7 @@ export default function AICopilot() {
                   <Sparkles size={28} className="text-white" />
                 </motion.div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">How can I help you today?</h2>
-                <p className="text-sm text-slate-500 mb-6 text-center max-w-md">
+                <p className="text-sm text-muted mb-6 text-center max-w-md">
                   Ask any business question. Specialist agents query your live sales, inventory,
                   pricing, campaign and customer data, and retrieve supporting policy documents.
                 </p>
@@ -135,7 +135,7 @@ export default function AICopilot() {
                       </motion.div>
                       <div>
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">Investigation in Progress</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted">
                           {completedAgents.length} of {agents.length} agents complete · querying live data
                         </p>
                       </div>
@@ -178,7 +178,7 @@ export default function AICopilot() {
                         which tools they called. This is the real backend
                         response, not a replay of the loading animation. */}
                     <details className="ml-11 mt-3 group" open>
-                      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 select-none">
+                      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-faint hover:text-slate-600 dark:hover:text-slate-300 select-none">
                         Agent trace ({result.agents.length})
                       </summary>
                       <div className="mt-2 space-y-2">
@@ -198,7 +198,7 @@ export default function AICopilot() {
               </div>
             )}
 
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-600">
               <div className="flex items-end gap-2">
                 <textarea
                   value={input}
@@ -207,7 +207,7 @@ export default function AICopilot() {
                   placeholder="Ask a business question..."
                   rows={1}
                   disabled={phase === 'investigating'}
-                  className="flex-1 px-4 py-3 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none disabled:opacity-50"
+                  className="flex-1 px-4 py-3 text-sm rounded-xl field resize-none disabled:opacity-50"
                 />
                 <Button
                   onClick={() => handleSend()}
@@ -223,7 +223,7 @@ export default function AICopilot() {
 
           {messages.length === 0 && phase === 'idle' && (
             <div className="mt-4">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Try asking</h3>
+              <h3 className="text-xs font-semibold text-faint uppercase tracking-wider mb-2">Try asking</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { title: 'Shampoo sales decline', date: 'Sales + pricing', query: 'Why are shampoo sales decreasing?' },
@@ -236,10 +236,10 @@ export default function AICopilot() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSend(conv.query)}
-                    className="p-3 rounded-xl text-left text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-primary/30 transition-all"
+                    className="p-3 rounded-xl text-left text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 hover:border-primary/30 transition-all"
                   >
                     <p className="font-medium text-slate-900 dark:text-white truncate">{conv.title}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{conv.date}</p>
+                    <p className="text-[10px] text-faint mt-0.5">{conv.date}</p>
                   </motion.button>
                 ))}
               </div>

@@ -47,33 +47,33 @@ export default function Login() {
           </div>
           <div>
             <h1 className="font-bold text-xl text-slate-900 dark:text-white tracking-tight">RetailIQ</h1>
-            <p className="text-xs text-slate-400">Decision Intelligence</p>
+            <p className="text-xs text-faint">Decision Intelligence</p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-600 p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Sign in</h2>
-          <p className="text-sm text-slate-500 mb-5">Access your retail intelligence workspace.</p>
+          <p className="text-sm text-muted mb-5">Access your retail intelligence workspace.</p>
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+              <label htmlFor="email" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1.5">
                 Email
               </label>
               <input
                 id="email" type="email" required autoComplete="username"
                 value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-3 py-2.5 text-sm rounded-xl field"
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+              <label htmlFor="password" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1.5">
                 Password
               </label>
               <input
                 id="password" type="password" required autoComplete="current-password"
                 value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-3 py-2.5 text-sm rounded-xl field"
               />
             </div>
 
@@ -89,8 +89,8 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Demo accounts</p>
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-600">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-faint mb-2">Demo accounts</p>
             <div className="space-y-1.5">
               {DEMO_ACCOUNTS.map((a) => (
                 <button
@@ -98,8 +98,8 @@ export default function Login() {
                   onClick={() => { setEmail(a.email); setPassword(DEMO_PASSWORD) }}
                   className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
-                  <span className="text-slate-600 dark:text-slate-400">{a.label}</span>
-                  <span className="font-mono text-slate-400">{a.email}</span>
+                  <span className="text-slate-600 dark:text-slate-300">{a.label}</span>
+                  <span className="font-mono text-faint">{a.email}</span>
                 </button>
               ))}
             </div>

@@ -50,7 +50,7 @@ export default function CampaignAnalytics() {
                     style={{ width: `${Math.min(ch.roi * 20, 100)}%` }}
                   />
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">{formatCurrency(ch.spend)} spent · {formatCurrency(ch.revenue)} revenue</p>
+                <p className="text-xs text-muted mt-0.5">{formatCurrency(ch.spend)} spent · {formatCurrency(ch.revenue)} revenue</p>
               </div>
             ))}
           </div>
@@ -59,24 +59,24 @@ export default function CampaignAnalytics() {
 
       {/* Campaign List */}
       <Card className="!p-0 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-600">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">All Campaigns</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+              <tr className="border-b border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800/50">
                 {['Campaign', 'Status', 'Budget', 'Spent', 'ROI', 'Impressions', 'Conversions', 'Period'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {campaigns.map((c) => (
-                <tr key={c.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <tr key={c.id} className="border-b border-slate-100 dark:border-slate-600 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="px-4 py-3">
                     <p className="font-medium text-slate-900 dark:text-white">{c.name}</p>
-                    <p className="text-xs text-slate-400">{c.id}</p>
+                    <p className="text-xs text-faint">{c.id}</p>
                   </td>
                   <td className="px-4 py-3"><StatusChip status={c.status} /></td>
                   <td className="px-4 py-3">{formatCurrency(c.budget)}</td>
@@ -89,13 +89,13 @@ export default function CampaignAnalytics() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`font-bold ${c.roi >= 3 ? 'text-success' : c.roi >= 2 ? 'text-warning' : c.roi > 0 ? 'text-danger' : 'text-slate-400'}`}>
+                    <span className={`font-bold ${c.roi >= 3 ? 'text-success' : c.roi >= 2 ? 'text-warning' : c.roi > 0 ? 'text-danger' : 'text-faint'}`}>
                       {c.roi > 0 ? `${c.roi}x` : '—'}
                     </span>
                   </td>
                   <td className="px-4 py-3">{c.impressions > 0 ? formatNumber(c.impressions) : '—'}</td>
                   <td className="px-4 py-3">{c.conversions > 0 ? formatNumber(c.conversions) : '—'}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{c.startDate} → {c.endDate}</td>
+                  <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{c.startDate} → {c.endDate}</td>
                 </tr>
               ))}
             </tbody>

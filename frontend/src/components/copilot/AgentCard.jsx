@@ -29,7 +29,7 @@ export default function AgentCard({ agent, status, progress, index }) {
         relative rounded-2xl p-4 border transition-all duration-300
         ${isActive ? 'bg-primary/5 border-primary/30 shadow-lg shadow-primary/10 ring-1 ring-primary/20' : ''}
         ${isComplete ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800' : ''}
-        ${isPending ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-50' : ''}
+        ${isPending ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600 opacity-50' : ''}
       `}
     >
       <div className="flex items-start gap-3">
@@ -37,7 +37,7 @@ export default function AgentCard({ agent, status, progress, index }) {
           p-2.5 rounded-xl flex-shrink-0 transition-all duration-300
           ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/30' : ''}
           ${isComplete ? 'bg-emerald-500 text-white' : ''}
-          ${isPending ? 'bg-slate-200 dark:bg-slate-700 text-slate-400' : ''}
+          ${isPending ? 'bg-slate-200 dark:bg-slate-700 text-faint' : ''}
         `}>
           {isComplete ? <CheckCircle2 size={20} /> : isActive ? <Loader2 size={20} className="animate-spin" /> : <Icon size={20} />}
         </div>
@@ -48,12 +48,12 @@ export default function AgentCard({ agent, status, progress, index }) {
             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full
               ${isActive ? 'bg-primary/10 text-primary' : ''}
               ${isComplete ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' : ''}
-              ${isPending ? 'bg-slate-100 text-slate-400 dark:bg-slate-800' : ''}
+              ${isPending ? 'bg-slate-100 text-faint dark:bg-slate-800' : ''}
             `}>
               {isActive ? 'Working...' : isComplete ? 'Complete' : 'Waiting'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{agent.task}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-300 mt-1">{agent.task}</p>
 
           {/* Real findings returned by the backend once the agent has run */}
           {isComplete && agent.findings?.length > 0 && (
@@ -69,21 +69,21 @@ export default function AgentCard({ agent, status, progress, index }) {
 
           {isComplete && agent.toolsCalled?.length > 0 && (
             <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-              <Wrench size={11} className="text-slate-400" />
+              <Wrench size={11} className="text-faint" />
               {agent.toolsCalled.map((t) => (
-                <span key={t} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                <span key={t} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-muted">
                   {t}
                 </span>
               ))}
               {agent.duration ? (
-                <span className="text-[10px] text-slate-400 ml-auto">{agent.duration}ms</span>
+                <span className="text-[10px] text-faint ml-auto">{agent.duration}ms</span>
               ) : null}
             </div>
           )}
 
           {(isActive || isComplete) && (
             <div className="mt-3">
-              <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+              <div className="flex items-center justify-between text-[10px] text-faint mb-1">
                 <span>Progress</span>
                 <span>{Math.round(progress)}%</span>
               </div>
@@ -96,7 +96,7 @@ export default function AgentCard({ agent, status, progress, index }) {
                 />
               </div>
               {isActive && (
-                <p className="text-[10px] text-slate-400 mt-1.5">
+                <p className="text-[10px] text-faint mt-1.5">
                   Est. {Math.ceil((agent.duration * (1 - progress / 100)) / 1000)}s remaining
                 </p>
               )}
