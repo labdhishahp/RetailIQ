@@ -98,6 +98,8 @@ def create_app() -> FastAPI:
             "database": detail,
             "latency_ms": round((time.perf_counter() - started) * 1000, 1),
             "llm_configured": settings.llm_enabled,
+            "llm_provider": settings.llm_provider.lower() if settings.llm_enabled else None,
+            "llm_model": settings.active_llm_model if settings.llm_enabled else None,
             "cache": cache_stats(),
             "version": settings.api_version,
         }
@@ -107,8 +109,9 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(v1_router, prefix=settings.api_prefix)
-    logger.info("RetailIQ API ready (llm=%s, cache_ttl=%ss)",
-                settings.llm_enabled, settings.analytics_cache_seconds)
+    logger.info("RetailIQ API ready (llm=%s, provider=%s, model=%s, cache_ttl=%ss)",
+                settings.llm_enabled, settings.llm_provider, settings.active_llm_model,
+                settings.analytics_cache_seconds)
     return app
 
 

@@ -44,3 +44,6 @@ frontend/.diag.mjs
 frontend/.kb.mjs
 frontend/.copilot*.mjs
 frontend/.e2e-state.json
+
+# Evaluation run outputs
+backend/eval/results/

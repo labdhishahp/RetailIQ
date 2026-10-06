@@ -39,10 +39,12 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
 
     # --- LLM (optional) --------------------------------------------------
-    # With an Anthropic key the lead investigator and every specialist are
+    # With a model configured the lead investigator and every specialist are
     # model-driven: they choose tools, read the results and decide whether to
     # dig further. Without one the same agents run on rule policies that are
     # also observation-driven; only the reasoning is by rule.
+    #   LLM_PROVIDER=anthropic -> LLM_API_KEY + LLM_MODEL
+    #   LLM_PROVIDER=openai    -> OPENAI_API_KEY + OPENAI_MODEL (Responses API)
     llm_provider: str = "anthropic"
     llm_api_key: str = ""
     llm_model: str = "claude-opus-5-5"
@@ -51,6 +53,14 @@ class Settings(BaseSettings):
     llm_fallbacks: bool = True          # server-side refusal fallback (Claude API only)
     llm_lead_effort: str = "medium"     # lead investigator: plans, re-plans, concludes
     llm_agent_effort: str = "low"       # specialists: narrow tool loops
+
+    # --- other providers ---------------------------------------------------
+    # The OpenAI and Gemini adapters (services/llm_providers.py). OpenAI is also
+    # the live provider when LLM_PROVIDER=openai; the evaluation harness selects
+    # either by model id.
+    openai_api_key: str = ""
+    openai_model: str = "gpt-5.5"
+    gemini_api_key: str = ""
 
     # --- agent budgets ----------------------------------------------------
     # The deployment's function limit is 60s; the deadline leaves room to
@@ -69,7 +79,13 @@ class Settings(BaseSettings):
 
     @property
     def llm_enabled(self) -> bool:
+        if self.llm_provider.lower() == "openai":
+            return bool(self.openai_api_key)
         return bool(self.llm_api_key)
+
+    @property
+    def active_llm_model(self) -> str:
+        return self.openai_model if self.llm_provider.lower() == "openai" else self.llm_model
 
 
 @lru_cache
