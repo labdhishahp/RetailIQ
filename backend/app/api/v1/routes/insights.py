@@ -3,10 +3,12 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, require_manager
-from app.models import Alert, Decision, Recommendation, Report, Simulation, User
+from app.models import (
+    Alert, Conversation, Decision, Message, Recommendation, Report, Simulation, User,
+)
 from app.schemas.insight import (
-    AlertRead, DecisionCreate, DecisionRead, RecommendationAction, RecommendationRead,
-    ReportCreate, ReportDetail, ReportRead, SimulationRead, SimulationRequest,
+    AlertRead, DecisionCreate, DecisionRead, DecisionReportCreate, RecommendationAction,
+    RecommendationRead, ReportCreate, ReportDetail, ReportRead, SimulationRead, SimulationRequest,
 )
 from app.services.alert_service import alert_service
 from app.services.recommendation_service import recommendation_service
@@ -144,6 +146,24 @@ def generate_report(payload: ReportCreate, db: Session = Depends(get_db),
     return report_service.generate(db, kind=payload.kind, user_id=user.id)
 
 
+@router.post("/reports/decision", response_model=ReportRead, status_code=status.HTTP_201_CREATED)
+def generate_decision_report(payload: DecisionReportCreate, db: Session = Depends(get_db),
+                             user: User = Depends(get_current_user)):
+    message = db.get(Message, payload.message_id)
+    if not message or message.role != "assistant" or not message.result:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    conversation = db.get(Conversation, message.conversation_id)
+    if conversation.user_id not in (None, user.id):
+        raise HTTPException(status_code=403, detail="Not your conversation")
+    question = db.scalar(
+        select(Message.content)
+        .where(Message.conversation_id == message.conversation_id,
+               Message.role == "user", Message.id < message.id)
+        .order_by(Message.id.desc()).limit(1)) or conversation.title
+    return report_service.generate_decision(db, message=message, question=question,
+                                            user_id=user.id)
+
+
 @router.get("/reports/{report_id}", response_model=ReportDetail)
 def get_report(report_id: int, db: Session = Depends(get_db),
                _: User = Depends(get_current_user)):
@@ -154,13 +174,21 @@ def get_report(report_id: int, db: Session = Depends(get_db),
 
 
 @router.get("/reports/{report_id}/download")
-def download_report(report_id: int, fmt: str = Query("csv", pattern="^(csv|json)$"),
+def download_report(report_id: int, fmt: str = Query("csv", pattern="^(csv|json|pdf)$"),
                     db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     report = db.get(Report, report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     if report.status != "ready":
         raise HTTPException(status_code=409, detail="Report is not ready")
+    if fmt == "pdf":
+        # Rendered from the saved payload only: no agents, queries or new report.
+        if report.kind != "decision":
+            raise HTTPException(status_code=400, detail="PDF export is available for decision reports")
+        from app.services.report_pdf import decision_report_pdf
+        return Response(
+            content=decision_report_pdf(report), media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{report.code}.pdf"'})
     if fmt == "json":
         return Response(
             content=__import__("json").dumps(

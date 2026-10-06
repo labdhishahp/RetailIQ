@@ -90,6 +90,12 @@ class ReportCreate(BaseModel):
     kind: str = Field("weekly", pattern="^(weekly|monthly|inventory|campaign|customer)$")
 
 
+class DecisionReportCreate(BaseModel):
+    """A Decision Report is built from one saved copilot investigation."""
+
+    message_id: int
+
+
 class SimulationRequest(BaseModel):
     name: str = Field("Scenario", max_length=255)
     discount_pct: float = Field(..., ge=0, le=90)

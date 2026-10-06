@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { FileText, Download, Sparkles } from 'lucide-react'
+import { FileText, Download, Sparkles, Eye } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -46,6 +47,7 @@ const REPORT_KINDS = [
 
 export default function Reports() {
   const { reports, generateReport, pushToast } = useDemo()
+  const navigate = useNavigate()
   const [generating, setGenerating] = useState(false)
   const [kind, setKind] = useState('weekly')
 
@@ -167,6 +169,15 @@ export default function Reports() {
                 {!report.aiSummary && report.status === 'generating' && <GeneratingAnimation />}
 
                 <div className="flex gap-2 mt-auto">
+                  {report.type === 'decision' && (
+                    <Button
+                      icon={Eye} size="sm" className="flex-1"
+                      disabled={report.status !== 'ready'}
+                      onClick={() => navigate(`/reports/${report.dbId}`)}
+                    >
+                      View
+                    </Button>
+                  )}
                   <Button
                     variant="secondary" icon={Download} size="sm" className="flex-1"
                     disabled={report.status !== 'ready'}

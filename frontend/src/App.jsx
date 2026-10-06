@@ -9,6 +9,7 @@ import CampaignAnalytics from './pages/CampaignAnalytics'
 import AICopilot from './pages/AICopilot'
 import KnowledgeBase from './pages/KnowledgeBase'
 import Reports from './pages/Reports'
+import ReportDetail from './pages/ReportDetail'
 import DecisionHistory from './pages/DecisionHistory'
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="copilot" element={<AICopilot />} />
         <Route path="knowledge" element={<KnowledgeBase />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="reports/:id" element={<ReportDetail />} />
         <Route path="history" element={<DecisionHistory />} />
         <Route path="settings" element={<Settings />} />
         <Route path="profile" element={<Profile />} />

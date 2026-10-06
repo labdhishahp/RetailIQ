@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Sparkles, RotateCcw, PanelRightOpen, PanelRightClose } from 'lucide-react'
+import { Send, Sparkles, RotateCcw, PanelRightOpen, PanelRightClose, FileText } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -11,6 +12,7 @@ import SimulationPanel from '../components/copilot/SimulationPanel'
 import PromptSuggestions from '../components/copilot/PromptSuggestions'
 import { useInvestigation } from '../hooks/useInvestigation'
 import { useDemo } from '../context/DemoContext'
+import { createDecisionReport } from '../api/retail'
 import { promptSuggestions } from '../data/mockData'
 import { AlertCircle } from 'lucide-react'
 
@@ -21,6 +23,8 @@ export default function AICopilot() {
   const [showTyping, setShowTyping] = useState(false)
   const chatEndRef = useRef(null)
   const { simulationPhase, pushToast, refreshData } = useDemo()
+  const navigate = useNavigate()
+  const [creatingReport, setCreatingReport] = useState(false)
 
   const handleInvestigationComplete = useCallback((result) => {
     pushToast({
@@ -35,8 +39,25 @@ export default function AICopilot() {
 
   const {
     phase, activeAgentIndex, completedAgents, agentProgress,
-    result, error, agents, startInvestigation, reset,
+    result, error, agents, messageId, startInvestigation, reset,
   } = useInvestigation(handleInvestigationComplete)
+
+  const handleCreateReport = async () => {
+    setCreatingReport(true)
+    try {
+      const report = await createDecisionReport(messageId)
+      refreshData({ silent: true })
+      if (report.status === 'ready') {
+        navigate(`/reports/${report.dbId}`)
+      } else {
+        pushToast({ title: 'Report failed', message: report.aiSummary, type: 'error' })
+      }
+    } catch (err) {
+      pushToast({ title: 'Report failed', message: err.message, type: 'error' })
+    } finally {
+      setCreatingReport(false)
+    }
+  }
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -191,6 +212,15 @@ export default function AICopilot() {
                     <div className="ml-11 mt-3">
                       <RecommendationCard result={result} simulationPhase={simulationPhase} />
                     </div>
+
+                    {messageId && (
+                      <div className="ml-11 mt-3">
+                        <Button variant="secondary" size="sm" icon={FileText}
+                          onClick={handleCreateReport} disabled={creatingReport}>
+                          {creatingReport ? 'Creating report…' : 'Create Report'}
+                        </Button>
+                      </div>
+                    )}
                   </motion.div>
                 )}
 

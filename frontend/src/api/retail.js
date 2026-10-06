@@ -159,6 +159,9 @@ export const generateReport = async (kind) =>
   adaptReport(await apiPost('/reports/generate', { kind }))
 export const downloadReport = (dbId, code, fmt = 'csv') =>
   downloadFile(`/reports/${dbId}/download?fmt=${fmt}`, `${code}.${fmt}`)
+export const createDecisionReport = async (messageId) =>
+  adaptReport(await apiPost('/reports/decision', { message_id: messageId }))
+export const getReportDetail = (dbId) => apiGet(`/reports/${dbId}`)
 
 export const runSimulation = (payload) => apiPost('/simulations/run', payload)
 export const getSimulations = () => apiGet('/simulations')

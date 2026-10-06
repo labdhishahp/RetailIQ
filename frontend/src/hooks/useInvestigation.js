@@ -23,6 +23,8 @@ export function useInvestigation(onComplete) {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [conversationId, setConversationId] = useState(null)
+  // The saved assistant message: a Decision Report is generated from it.
+  const [messageId, setMessageId] = useState(null)
   const tickRef = useRef(null)
 
   const stopTicker = useCallback(() => {
@@ -40,6 +42,7 @@ export function useInvestigation(onComplete) {
     setAgentProgress({})
     setResult(null)
     setError(null)
+    setMessageId(null)
 
     // The request is a single round trip, so progress is advanced on a timer
     // purely to keep the UI responsive; it is replaced by real per-agent
@@ -76,6 +79,7 @@ export function useInvestigation(onComplete) {
       setAgentProgress(Object.fromEntries(realAgents.map((a) => [a.id, 100])))
       setActiveAgentIndex(-1)
       setConversationId(response.conversation_id)
+      setMessageId(response.message_id)
       setResult(response.result)
       setPhase('complete')
       onComplete?.(response.result)
@@ -99,10 +103,11 @@ export function useInvestigation(onComplete) {
     setResult(null)
     setError(null)
     setConversationId(null)
+    setMessageId(null)
   }, [stopTicker])
 
   return {
     phase, activeAgentIndex, completedAgents, agentProgress,
-    result, error, agents, conversationId, startInvestigation, reset,
+    result, error, agents, conversationId, messageId, startInvestigation, reset,
   }
 }
